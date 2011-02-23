@@ -11,8 +11,19 @@ import java.util.Map.Entry
 
 abstract class AbstractGraphModel {
 
+    String name
+    String packageName
+
     private List<ComponentNode> componentNodes = []
     private List<Connection> connections = []
+
+    AbstractGraphModel() {
+    }
+
+    AbstractGraphModel(String name, String packageName) {
+        this.name = name
+        this.packageName = packageName
+    }
 
     ComponentNode createComponentNode(ComponentDefinition definition, String name) {
         ComponentNode newNode = new ComponentNode(type: definition, name: name)
