@@ -1,7 +1,7 @@
-package org.pillarone.riskanalytice.graph.core.graph.model
+package org.pillarone.riskanalytics.graph.core.graph.model
 
 import java.lang.reflect.Field
-import org.pillarone.riskanalytice.graph.core.palette.model.ComponentDefinition
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.core.packets.PacketList
 import org.pillarone.riskanalytics.core.packets.Packet
 import java.lang.reflect.Type

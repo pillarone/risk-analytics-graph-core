@@ -1,11 +1,7 @@
 package org.pillarone.riskanalytics.graph.core.graph.model
 
-import org.pillarone.riskanalytice.graph.core.graph.model.ModelGraphModel
-import org.pillarone.riskanalytice.graph.core.palette.service.PaletteService
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 import org.pillarone.riskanalytics.core.example.component.TestComponent
-import org.pillarone.riskanalytice.graph.core.graph.model.ComponentNode
-import org.pillarone.riskanalytice.graph.core.graph.model.Connection
-import org.pillarone.riskanalytice.graph.core.graph.model.Port
 
 class ModelGraphModelTests extends GroovyTestCase {
 

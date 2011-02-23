@@ -1,10 +1,10 @@
-package org.pillarone.riskanalytice.graph.core.graph.model
+package org.pillarone.riskanalytics.graph.core.graph.model
 
 import org.apache.commons.logging.LogFactory
 import org.apache.commons.logging.Log
 
 
-class InPort extends Port {
+class OutPort extends Port {
 
     private static Log LOG = LogFactory.getLog(InPort)
 
@@ -14,11 +14,11 @@ class InPort extends Port {
     }
 
     private boolean doInternalAllowedToConnectTo(OutPort outPort) {
-        return this.composedComponentOuterPort ? false : !outPort.composedComponentOuterPort
+        return this.composedComponentOuterPort ? !outPort.composedComponentOuterPort : outPort.composedComponentOuterPort
     }
 
     private boolean doInternalAllowedToConnectTo(InPort inPort) {
-        return this.composedComponentOuterPort ? !inPort.composedComponentOuterPort : inPort.composedComponentOuterPort
+        return this.composedComponentOuterPort ? false : !inPort.composedComponentOuterPort
     }
 
     private boolean doInternalAllowedToConnectTo(Port port) {

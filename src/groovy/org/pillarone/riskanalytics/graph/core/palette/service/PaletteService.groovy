@@ -1,6 +1,6 @@
-package org.pillarone.riskanalytice.graph.core.palette.service
+package org.pillarone.riskanalytics.graph.core.palette.service
 
-import org.pillarone.riskanalytice.graph.core.palette.model.ComponentDefinition
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
 import org.springframework.core.type.filter.AssignableTypeFilter
 import org.pillarone.riskanalytics.core.components.Component

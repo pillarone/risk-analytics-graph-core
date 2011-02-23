@@ -1,7 +1,6 @@
 package org.pillarone.riskanalytics.graph.core.palette.service
 
-import org.pillarone.riskanalytice.graph.core.palette.service.PaletteService
-import org.pillarone.riskanalytice.graph.core.palette.model.ComponentDefinition
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.core.example.component.TestComponent
 
 

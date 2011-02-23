@@ -1,4 +1,4 @@
-package org.pillarone.riskanalytice.graph.core.palette.model
+package org.pillarone.riskanalytics.graph.core.palette.model
 
 import org.pillarone.riskanalytics.core.components.Component
 

@@ -1,4 +1,4 @@
-package org.pillarone.riskanalytice.graph.core.graph.model
+package org.pillarone.riskanalytics.graph.core.graph.model
 
 
 class Connection {
