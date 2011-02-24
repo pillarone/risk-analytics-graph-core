@@ -4,6 +4,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
+import org.springframework.dao.DataAccessException
 
 class GraphPersistenceService {
 
@@ -22,7 +23,14 @@ class GraphPersistenceService {
                     )
             )
         }
-        model.save(flush: true)
+        try {
+            if (!model.save(flush: true)) {
+                throw new GraphPersistenceException(model.errors.toString())
+            }
+            graphModel.id = model.id
+        } catch (DataAccessException e) {
+            throw new GraphPersistenceException(e.message, e)
+        }
     }
 
     protected Node createNode(ComponentNode componentNode) {
@@ -40,5 +48,22 @@ class GraphPersistenceService {
     protected NodePort find(GraphModel model, String nodeName, String portName) {
         Node node = model.nodes.find {it.name == nodeName}
         return node.ports.find {it.name == portName}
+    }
+
+    void delete(AbstractGraphModel graphModel) {
+        Long id = graphModel.id
+        if (id == null) {
+            throw new GraphPersistenceException("Delete failed. Model ${graphModel} is not persisted.")
+        }
+        GraphModel model = GraphModel.get(id)
+        if (model == null) {
+            throw new GraphPersistenceException("Delete failed. No entity with id ${id} found.")
+        }
+        try {
+            model.delete(flush: true)
+            graphModel.id = null
+        } catch (DataAccessException e) {
+            throw new GraphPersistenceException(e.message, e)
+        }
     }
 }

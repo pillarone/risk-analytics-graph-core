@@ -11,6 +11,8 @@ import java.util.Map.Entry
 
 abstract class AbstractGraphModel {
 
+    Long id
+
     String name
     String packageName
 
