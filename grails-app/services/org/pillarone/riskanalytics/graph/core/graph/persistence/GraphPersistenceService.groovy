@@ -5,6 +5,8 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
 import org.springframework.dao.DataAccessException
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
+import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 
 class GraphPersistenceService {
 
@@ -23,6 +25,7 @@ class GraphPersistenceService {
                     )
             )
         }
+        doTypeSpecificMapping(graphModel, model)
         try {
             if (!model.save(flush: true)) {
                 throw new GraphPersistenceException(model.errors.toString())
@@ -34,25 +37,40 @@ class GraphPersistenceService {
     }
 
     protected GraphModel findOrCreateGraphModel(AbstractGraphModel graphModel) {
+        GraphModel model
         if (graphModel.id == null) {
-            return new GraphModel(name: graphModel.name, packageName: graphModel.packageName)
-        }
+            model = new GraphModel(name: graphModel.name, packageName: graphModel.packageName)
+        } else {
+            model = GraphModel.get(graphModel.id)
+            model.name = graphModel.name
+            model.packageName = graphModel.packageName
 
-        GraphModel model = GraphModel.get(graphModel.id)
-        model.name = graphModel.name
-        model.packageName = graphModel.packageName
+            if (model.nodes != null) {
+                Set<Node> allNodes = new HashSet<Node>(model.nodes)
+                for (Node toRemove in allNodes) {
+                    model.removeFromNodes(toRemove)
+                    toRemove.delete()
+                }
+            }
 
-        Set<Node> allNodes = new HashSet<Node>(model.nodes)
-        for (Node toRemove in allNodes) {
-            model.removeFromNodes(toRemove)
-            toRemove.delete()
-        }
-        Set<Edge> allEdges = new HashSet<Edge>(model.edges)
-        for (Edge toRemove in allEdges) {
-            model.removeFromEdges(toRemove)
-            toRemove.delete()
-        }
+            if (model.edges != null) {
+                Set<Edge> allEdges = new HashSet<Edge>(model.edges)
+                for (Edge toRemove in allEdges) {
+                    model.removeFromEdges(toRemove)
+                    toRemove.delete()
+                }
+            }
 
+            if (model.ports != null) {
+                Set<ComponentPort> allPorts = new HashSet<ComponentPort>(model.ports)
+                for (ComponentPort toRemove in allPorts) {
+                    model.removeFromPorts(toRemove)
+                    toRemove.delete()
+                }
+            }
+
+        }
+        model.typeClass = graphModel.class.name
         return model
     }
 
@@ -87,6 +105,24 @@ class GraphPersistenceService {
             graphModel.id = null
         } catch (DataAccessException e) {
             throw new GraphPersistenceException(e.message, e)
+        }
+    }
+
+    protected void doTypeSpecificMapping(AbstractGraphModel graphModel, GraphModel model) { }
+
+    protected void doTypeSpecificMapping(ComposedComponentGraphModel graphModel, GraphModel model) {
+        for (Port port in graphModel.outerInPorts) {
+            model.addToPorts(new ComponentPort(name: port.name, packetClass: port.packetType.name))
+        }
+
+        for (Port port in graphModel.outerOutPorts) {
+            model.addToPorts(new ComponentPort(name: port.name, packetClass: port.packetType.name))
+        }
+    }
+
+    protected void doTypeSpecificMapping(ModelGraphModel graphModel, GraphModel model) {
+        for (ComponentNode startComponent in graphModel.startComponents) {
+            model.nodes.find { it.name == startComponent.name }.startComponent = true
         }
     }
 }

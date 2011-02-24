@@ -5,8 +5,9 @@ class GraphModel {
 
     String name
     String packageName
+    String typeClass
 
-    static hasMany = [nodes: Node, edges: Edge]
+    static hasMany = [nodes: Node, edges: Edge, ports: ComponentPort]
 
     static constraints = {
         name(blank: false)

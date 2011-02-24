@@ -8,6 +8,13 @@ class ComposedComponentGraphModel extends AbstractGraphModel {
     private List<InPort> outerInPorts = []
     private List<OutPort> outerOutPorts = []
 
+    ComposedComponentGraphModel() {
+    }
+
+    ComposedComponentGraphModel(String name, String packageName) {
+        super(name, packageName)
+    }
+
     InPort createOuterInPort(Class<? extends Packet> packetClass, String name) {
         InPort inPort = new InPort(packetType: packetClass, name: name, composedComponentOuterPort: true)
         outerInPorts << inPort
