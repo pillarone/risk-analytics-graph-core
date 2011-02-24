@@ -9,7 +9,7 @@ import org.springframework.dao.DataAccessException
 class GraphPersistenceService {
 
     void save(AbstractGraphModel graphModel) {
-        GraphModel model = new GraphModel(name: graphModel.name, packageName: graphModel.packageName)
+        GraphModel model = findOrCreateGraphModel(graphModel)
 
         for (ComponentNode node in graphModel.allComponentNodes) {
             model.addToNodes(createNode(node))
@@ -31,6 +31,29 @@ class GraphPersistenceService {
         } catch (DataAccessException e) {
             throw new GraphPersistenceException(e.message, e)
         }
+    }
+
+    protected GraphModel findOrCreateGraphModel(AbstractGraphModel graphModel) {
+        if (graphModel.id == null) {
+            return new GraphModel(name: graphModel.name, packageName: graphModel.packageName)
+        }
+
+        GraphModel model = GraphModel.get(graphModel.id)
+        model.name = graphModel.name
+        model.packageName = graphModel.packageName
+
+        Set<Node> allNodes = new HashSet<Node>(model.nodes)
+        for (Node toRemove in allNodes) {
+            model.removeFromNodes(toRemove)
+            toRemove.delete()
+        }
+        Set<Edge> allEdges = new HashSet<Edge>(model.edges)
+        for (Edge toRemove in allEdges) {
+            model.removeFromEdges(toRemove)
+            toRemove.delete()
+        }
+
+        return model
     }
 
     protected Node createNode(ComponentNode componentNode) {
