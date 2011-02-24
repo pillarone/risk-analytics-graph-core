@@ -11,7 +11,7 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
 
     GraphPersistenceService graphPersistenceService
 
-    void testSave() {
+    void testSaveLoad() {
         ModelGraphModel model = new ModelGraphModel("name", "package")
         ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name")
         ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name2")
@@ -24,7 +24,8 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
 
         assertEquals 1, GraphModel.count()
 
-        GraphModel persistentModel = GraphModel.get(model.id)
+        long id = model.id
+        GraphModel persistentModel = GraphModel.get(id)
         assertNotNull persistentModel
 
         assertEquals "name", persistentModel.name
@@ -52,9 +53,19 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         Edge edge = persistentModel.edges.toList()[0]
         assertSame name_input3, edge.from
         assertSame name2_outClaims, edge.to
+
+
+        ModelGraphModel reloaded = graphPersistenceService.load(id)
+
+        assertEquals "name", reloaded.name
+        assertEquals "package", reloaded.packageName
+
+        assertEquals 2, reloaded.allComponentNodes.size()
+        assertEquals 1, reloaded.allConnections.size()
+        assertEquals 1, reloaded.startComponents.size()
     }
 
-    void testSaveComposedComponent() {
+    void testSaveLoadComposedComponent() {
         ComposedComponentGraphModel model = new ComposedComponentGraphModel("name", "package")
         ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name")
         ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name2")
@@ -68,7 +79,8 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
 
         assertEquals 1, GraphModel.count()
 
-        GraphModel persistentModel = GraphModel.get(model.id)
+        long id = model.id
+        GraphModel persistentModel = GraphModel.get(id)
         assertNotNull persistentModel
 
         assertEquals "name", persistentModel.name
@@ -98,6 +110,16 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertSame name2_outClaims, edge.to
 
         assertEquals 2, persistentModel.ports.size()
+
+        ComposedComponentGraphModel reloaded = graphPersistenceService.load(id)
+
+        assertEquals "name", reloaded.name
+        assertEquals "package", reloaded.packageName
+
+        assertEquals 2, reloaded.allComponentNodes.size()
+        assertEquals 1, reloaded.allConnections.size()
+        assertEquals 1, reloaded.outerInPorts.size()
+        assertEquals 1, reloaded.outerOutPorts.size()
     }
 
     void testDelete() {

@@ -7,8 +7,11 @@ import org.pillarone.riskanalytics.graph.core.graph.model.Port
 import org.springframework.dao.DataAccessException
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 
 class GraphPersistenceService {
+
+    protected PaletteService paletteService = PaletteService.getInstance()
 
     void save(AbstractGraphModel graphModel) {
         GraphModel model = findOrCreateGraphModel(graphModel)
@@ -123,6 +126,62 @@ class GraphPersistenceService {
     protected void doTypeSpecificMapping(ModelGraphModel graphModel, GraphModel model) {
         for (ComponentNode startComponent in graphModel.startComponents) {
             model.nodes.find { it.name == startComponent.name }.startComponent = true
+        }
+    }
+
+    AbstractGraphModel load(long id) {
+        GraphModel model = GraphModel.get(id)
+        if (model == null) {
+            throw new GraphPersistenceException("No model found with id $id")
+        }
+
+        return load(model)
+    }
+
+    List<AbstractGraphModel> loadAll() {
+        return GraphModel.list().collect { load(it) }
+    }
+
+    protected AbstractGraphModel load(GraphModel model) {
+        List<ComponentNode> createdNodes = []
+
+        AbstractGraphModel graphModel = getClass().getClassLoader().loadClass(model.typeClass).newInstance()
+        graphModel.name = model.name
+        graphModel.packageName = model.packageName
+        graphModel.id = model.id
+
+        for (Node node in model.nodes) {
+            createdNodes << graphModel.createComponentNode(paletteService.getComponentDefinition(node.className), node.name)
+        }
+        for (Edge edge in model.edges) {
+            ComponentNode fromNode = createdNodes.find { it.name == edge.from.node.name }
+            ComponentNode toNode = createdNodes.find { it.name == edge.to.node.name }
+            graphModel.createConnection(fromNode.getPort(edge.from.name), toNode.getPort(edge.to.name))
+        }
+        doTypeSpecificLoading(graphModel, model)
+        return graphModel
+    }
+
+    protected void doTypeSpecificLoading(AbstractGraphModel graphModel, GraphModel model) {}
+
+    protected void doTypeSpecificLoading(ModelGraphModel graphModel, GraphModel model) {
+        for (Node node in model.nodes) {
+            if (node.startComponent) {
+                graphModel.startComponents << graphModel.allComponentNodes.find { it.name == node.name }
+            }
+        }
+    }
+
+    protected void doTypeSpecificLoading(ComposedComponentGraphModel graphModel, GraphModel model) {
+        for (ComponentPort port in model.ports) {
+            String portName = port.name
+            if (portName.startsWith("in")) {
+                graphModel.createOuterInPort(getClass().getClassLoader().loadClass(port.packetClass), portName)
+            } else if (portName.startsWith("out")) {
+                graphModel.createOuterOutPort(getClass().getClassLoader().loadClass(port.packetClass), portName)
+            } else {
+                throw new GraphPersistenceException("Channels must start with 'in' or 'out' - Found ${portName}")
+            }
         }
     }
 }
