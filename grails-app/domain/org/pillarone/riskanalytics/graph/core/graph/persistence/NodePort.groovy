@@ -8,6 +8,10 @@ class NodePort {
 
     static belongsTo = [node: Node]
 
+    static constraints = {
+        name(unique: 'node')
+    }
+
     String toString() {
         name
     }

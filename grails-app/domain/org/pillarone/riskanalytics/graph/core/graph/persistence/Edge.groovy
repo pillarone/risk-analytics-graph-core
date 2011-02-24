@@ -8,6 +8,11 @@ class Edge {
     NodePort from
     NodePort to
 
+    static mapping = {
+        from(insertable: false, updateable: false)
+        to(insertable: false, updateable: false)
+    }
+
     String toString() {
         "$from -> $to"
     }

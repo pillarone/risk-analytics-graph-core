@@ -18,8 +18,8 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
 
         model.createConnection(node.getPort("input3"), node2.getPort("outClaims"))
 
-//        graphPersistenceService.save(model)
-//
-//        assertEquals 1, GraphModel.list().size()
+        graphPersistenceService.save(model)
+
+        assertEquals 1, GraphModel.list().size()
     }
 }
