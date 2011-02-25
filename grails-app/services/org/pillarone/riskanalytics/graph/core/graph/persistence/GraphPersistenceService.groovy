@@ -8,6 +8,8 @@ import org.springframework.dao.DataAccessException
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
+import org.pillarone.riskanalytics.core.model.Model
+import org.pillarone.riskanalytics.core.model.registry.ModelRegistry
 
 class GraphPersistenceService {
 
@@ -183,5 +185,10 @@ class GraphPersistenceService {
                 throw new GraphPersistenceException("Channels must start with 'in' or 'out' - Found ${portName}")
             }
         }
+    }
+
+    //TODO: probably belongs somewhere else
+    void deployClass(Class<? extends Model> modelClass) {
+        ModelRegistry.instance.addModel(modelClass)
     }
 }

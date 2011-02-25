@@ -16,6 +16,11 @@ public class DatabaseClassLoader extends ClassLoader {
         if (!availableClasses.contains(name)) {
             throw new ClassNotFoundException(name);
         }
+
+        String packageName = name.substring(0, name.lastIndexOf("."));
+        if (getPackage(packageName) == null) {
+            definePackage(packageName, null, null, null, null, null, null, null);
+        }
         byte[] data = GroovyHelper.getClassDefinition(name);
         return defineClass(name, data, 0, data.length);
 

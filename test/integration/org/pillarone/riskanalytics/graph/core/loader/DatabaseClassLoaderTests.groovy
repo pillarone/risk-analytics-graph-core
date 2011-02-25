@@ -4,8 +4,13 @@ import org.codehaus.groovy.control.CompilerConfiguration
 import org.pillarone.riskanalytics.core.FileConstants
 import org.codehaus.groovy.tools.Compiler
 import org.pillarone.riskanalytics.core.model.Model
+import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceService
+import org.pillarone.riskanalytics.core.model.registry.ModelRegistry
 
 class DatabaseClassLoaderTests extends GroovyTestCase {
+
+    GraphPersistenceService graphPersistenceService
+
 
     String modelName = "dynamically loaded model!"
     String someObjectName = "some object"
@@ -88,7 +93,7 @@ class TestModel extends Model {
         }
 
         ClassLoader dbLoader = new DatabaseClassLoader(currentLoader)
-        Thread.currentThread().setContextClassLoader(dbLoader)
+//        Thread.currentThread().setContextClassLoader(dbLoader)
 
 
         Class c = dbLoader.loadClass("some.packagename.TestModel")
@@ -96,6 +101,14 @@ class TestModel extends Model {
         model.init()
 
         assertEquals modelName + someObjectName, model.name
+    }
+
+    void testDeploy() {
+        ClassLoader dbLoader = new DatabaseClassLoader(Thread.currentThread().contextClassLoader)
+        Class c = dbLoader.loadClass("some.packagename.TestModel")
+        graphPersistenceService.deployClass(c)
+        Set<Class> classes = ModelRegistry.instance.allModelClasses
+        assertEquals "some.packagename.TestModel", classes.toList()[0].name
     }
 
 }
