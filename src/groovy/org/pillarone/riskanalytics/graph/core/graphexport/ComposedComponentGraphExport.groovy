@@ -18,7 +18,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraph
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 
-public class ComposedComponentAbstractGraphExport extends AbstractGraphExport {
+public class ComposedComponentGraphExport extends AbstractGraphExport {
 
     private HashMap<String, JFieldVar> outerPorts = new HashMap<String, JFieldVar>();
     private static String WIREUTILS="org.pillarone.riskanalytics.core.wiring.WiringUtils";

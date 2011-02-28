@@ -11,7 +11,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
 
-public class ComposedComponentAbstractGraphImport extends AbstractGraphImport {
+public class ComposedComponentGraphImport extends AbstractGraphImport {
 
     @Override
     public AbstractGraphModel importGraph(Class clazz) {

@@ -12,10 +12,10 @@ class GraphImportService {
             Class clazz = gcl.parseClass(content);
 
             if (Model.isAssignableFrom(clazz)) {
-                return new ModelAbstractGraphImport().importGraph(clazz);
+                return new ModelGraphImport().importGraph(clazz);
             }
             if (ComposedComponent.isAssignableFrom(clazz)) {
-                return new ComposedComponentAbstractGraphImport().importGraph(clazz);
+                return new ComposedComponentGraphImport().importGraph(clazz);
             }
         } catch (Exception e) {
             e.printStackTrace();

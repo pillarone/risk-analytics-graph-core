@@ -17,10 +17,10 @@ class GraphExportService {
     }
 
     private String exportGraphIn(ModelGraphModel graph) {
-        return new ModelAbstractGraphExport().exportGraph(graph);
+        return new ModelGraphExport().exportGraph(graph);
     }
 
     private String exportGraphIn(ComposedComponentGraphModel graph) {
-        return new ComposedComponentAbstractGraphExport().exportGraph(graph);
+        return new ComposedComponentGraphExport().exportGraph(graph);
     }
 }

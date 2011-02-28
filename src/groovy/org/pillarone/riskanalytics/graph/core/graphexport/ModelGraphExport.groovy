@@ -12,7 +12,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 
-public class ModelAbstractGraphExport extends AbstractGraphExport {
+public class ModelGraphExport extends AbstractGraphExport {
 
     @Override
     public String exportGraph(AbstractGraphModel graph) {
