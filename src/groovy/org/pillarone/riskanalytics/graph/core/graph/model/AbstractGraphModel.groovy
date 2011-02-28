@@ -106,8 +106,8 @@ abstract class AbstractGraphModel {
         Map<String, Class> result = [:]
 
         Class currentClass = definition.typeClass
-        while (currentClass != Component) {
-            for (Field field in definition.typeClass.declaredFields) {
+        while (currentClass != Component.class) {
+            for (Field field in currentClass.declaredFields) {
                 String fieldName = field.name
                 if (fieldName.startsWith(prefix) && PacketList.isAssignableFrom(field.type)) {
                     Class packetType = Packet
