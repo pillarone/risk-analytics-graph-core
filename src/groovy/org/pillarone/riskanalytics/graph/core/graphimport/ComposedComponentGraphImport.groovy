@@ -36,9 +36,9 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
     }
 
 
-    @Override
+
     protected void addConnections(AbstractGraphModel graph, HashMap<Component, ComponentNode> components, Object graphClass) {
-        super.addConnections(graph, components, graphClass);
+        super.addConnections(graph, components);
         ComposedComponent c = (ComposedComponent) graphClass;
 
         for (ITransmitter t: c.getAllOutputReplicationTransmitter()) {

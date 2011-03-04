@@ -27,7 +27,7 @@ public abstract class AbstractGraphImport {
     }
 
 
-    protected void addConnections(AbstractGraphModel graph, HashMap<Component, ComponentNode> components, Object graphClass) {
+    protected void addConnections(AbstractGraphModel graph, HashMap<Component, ComponentNode> components) {
         HashMap<String, Boolean> visited = new HashMap<String, Boolean>();
 
         for (Component c: components.keySet()) {

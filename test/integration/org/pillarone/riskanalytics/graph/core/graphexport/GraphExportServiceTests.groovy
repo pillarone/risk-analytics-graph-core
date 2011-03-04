@@ -11,16 +11,7 @@ class GraphExportServiceTests extends GroovyTestCase {
     GraphImportService graphImportService;
     GraphExportService graphExportService;
 
-    protected void setUp() {
-        super.setUp()
-    }
-
-    protected void tearDown() {
-        super.tearDown()
-    }
-
-    void testCCImport() {
-        String ccFile = """package model;
+    String ccFile = """package model;
 
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.packets.PacketList;
@@ -49,22 +40,8 @@ public class TestCC
     }
 
 }"""
-        ComposedComponentGraphModel graph = graphImportService.importGraph(ccFile);
 
-        String ret = graphExportService.exportGraph(graph);
-        println ret;
-        ComposedComponentGraphModel graph2 = graphImportService.importGraph(ret);
-
-        assertEquals graph.allComponentNodes.size(), graph2.allComponentNodes.size()
-        assertEquals graph.allConnections.size(), graph2.allConnections.size()
-        assertEquals graph.outerInPorts.size(), graph2.outerInPorts.size()
-        assertEquals graph.outerOutPorts.size(), graph2.outerOutPorts.size()
-
-    }
-
-    void testModelImport() {
-
-        String modelFile = """package model;
+    String modelFile = """package model;
 import org.pillarone.riskanalytics.core.model.StochasticModel;
 import org.pillarone.riskanalytics.domain.pc.generators.claims.DynamicDevelopedClaimsGenerators;
 import org.pillarone.riskanalytics.domain.pc.generators.copulas.DynamicDependencies;
@@ -98,6 +75,30 @@ public class TestModel
 }
 """
 
+
+
+    protected void setUp() {
+        super.setUp()
+    }
+
+    protected void tearDown() {
+        super.tearDown()
+    }
+
+    void testCCExport() {
+        ComposedComponentGraphModel graph = graphImportService.importGraph(ccFile);
+        String ret = graphExportService.exportGraph(graph);
+        println ret;
+        ComposedComponentGraphModel graph2 = graphImportService.importGraph(ret);
+
+        assertEquals graph.allComponentNodes.size(), graph2.allComponentNodes.size()
+        assertEquals graph.allConnections.size(), graph2.allConnections.size()
+        assertEquals graph.outerInPorts.size(), graph2.outerInPorts.size()
+        assertEquals graph.outerOutPorts.size(), graph2.outerOutPorts.size()
+
+    }
+
+    void testModelExport() {
         ModelGraphModel graph = graphImportService.importGraph(modelFile);
         String ret = graphExportService.exportGraph(graph);
         println(ret)
@@ -107,6 +108,24 @@ public class TestModel
         assertEquals graph.allConnections.size(), graph2.allConnections.size()
         assertEquals graph.startComponents.size(), graph2.startComponents.size()
 
+    }
+
+    void testCCToBinary() {
+        ComposedComponentGraphModel graph = graphImportService.importGraph(ccFile);
+        Map<String, byte[]> classes = graphExportService.exportGraphToBinary(graph);
+        GroovyClassLoader gcl = new GroovyClassLoader();
+        for (String name: classes.keySet()) {
+            gcl.defineClass(name, classes.get(name));
+        }
+    }
+
+    void testModelToBinary() {
+        ModelGraphModel graph = graphImportService.importGraph(modelFile);
+        Map<String, byte[]> classes = graphExportService.exportGraphToBinary(graph)
+        GroovyClassLoader gcl = new GroovyClassLoader();
+        for (String name: classes.keySet()) {
+            gcl.defineClass(name, classes.get(name));
+        };
     }
 
 

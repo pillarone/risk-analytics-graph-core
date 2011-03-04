@@ -23,7 +23,7 @@ public class ModelGraphImport extends AbstractGraphImport {
 
             m.wire();
 
-            addConnections(graph, components, m);
+            addConnections(graph, components);
             return graph;
 
         } catch (Exception e) {
