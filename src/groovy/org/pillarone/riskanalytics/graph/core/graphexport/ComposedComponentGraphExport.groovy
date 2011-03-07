@@ -17,18 +17,18 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 
 public class ComposedComponentGraphExport extends AbstractGraphExport {
 
     private HashMap<String, JFieldVar> outerPorts = new HashMap<String, JFieldVar>();
-    private static String WIREUTILS="org.pillarone.riskanalytics.core.wiring.WiringUtils";
-    private static String WIRECAT="org.pillarone.riskanalytics.core.wiring.WireCategory";
-    private static String PORTREPCAT="org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory";
+    private static String WIREUTILS = "org.pillarone.riskanalytics.core.wiring.WiringUtils";
+    private static String WIRECAT = "org.pillarone.riskanalytics.core.wiring.WireCategory";
+    private static String PORTREPCAT = "org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory";
 
     public String exportGraph(AbstractGraphModel graph) {
         JCodeModel codeModel = new JCodeModel();
-        JDefinedClass ccClass = codeModel._class(graph.packageName+"."+graph.name)._extends(ComposedComponent.class);
-        initOuterPorts(graph, codeModel, ccClass);
+        JDefinedClass ccClass = codeModel._class(graph.packageName + "." + graph.name)._extends(ComposedComponent.class);
         initFields(graph, codeModel, ccClass);
         wireCC(graph, ccClass);
 
@@ -37,8 +37,20 @@ public class ComposedComponentGraphExport extends AbstractGraphExport {
         return removeHeader(out.toString());
     }
 
+    @Override
+    protected void initFields(AbstractGraphModel graph, JCodeModel codeModel, JDefinedClass graphClass) {
+        initOuterPorts(graph, codeModel, graphClass);
+        super.initFields(graph, codeModel, graphClass)
+        for (ComponentNode c: fields.keySet()) {
+            JFieldVar field= fields.get(c);
+            field.init(JExpr._new(field.type()));
+        }
+    }
+
+
+
     private void initOuterPorts(ComposedComponentGraphModel graph, JCodeModel codeModel, JDefinedClass ccClass) {
-        for (Port p: (graph.getOuterInPorts()+graph.getOuterOutPorts())) {
+        for (Port p: (graph.getOuterInPorts() + graph.getOuterOutPorts())) {
             JClass rawClass = codeModel.ref(PacketList.class);
             JClass detailClass = codeModel.ref(p.packetType);
             JClass packetList = rawClass.narrow(detailClass);
@@ -51,27 +63,29 @@ public class ComposedComponentGraphExport extends AbstractGraphExport {
     private void wireCC(ComposedComponentGraphModel graph, JDefinedClass ccClass) {
         JMethod wireComps = ccClass.method(com.sun.codemodel.JMod.PUBLIC, Void.TYPE, "wire");
         JBlock block = wireComps.body();
-        block.directStatement(WIREUTILS+".use("+PORTREPCAT+") {");
+        block.directStatement(WIREUTILS + ".use(" + PORTREPCAT + ") {");
 
         for (Connection c: graph.getAllConnections()) {
             if (c.from.composedComponentOuterPort) {
                 JFieldVar fromField = outerPorts.get(c.from.name);
                 JFieldVar toField;
-                if (c.to.componentNode!=null && (toField=fields.get(c.to.componentNode.name)) != null) {
+                if (c.to.componentNode != null && (toField = fields.get(c.to.componentNode)) != null) {
                     block.add(toField.ref(c.to.name).assign(JExpr._this().ref(fromField)));
                 }
             } else if (c.to.composedComponentOuterPort) {
                 JFieldVar toField = outerPorts.get(c.to.name);
                 JFieldVar fromField;
-                if (c.from.componentNode!=null &&(fromField=fields.get(c.from.componentNode.name)) != null) {
+                if (c.from.componentNode != null && (fromField = fields.get(c.from.componentNode)) != null) {
                     block.add(JExpr._this().ref(toField).assign(fromField.ref(c.from.name)));
                 }
             }
         }
         block.directStatement("}")
-        block.directStatement(WIREUTILS+".use("+WIRECAT+") {");
+        block.directStatement(WIREUTILS + ".use(" + WIRECAT + ") {");
         wireFields(graph, block);
         block.directStatement("}");
 
     }
+
+
 }

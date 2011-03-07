@@ -16,7 +16,7 @@ public class ModelGraphImport extends AbstractGraphImport {
 
             m.init();
 
-            ModelGraphModel graph = new ModelGraphModel(m.getClass().getSimpleName(),m.getClass().getPackage().name);
+            ModelGraphModel graph = new ModelGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
             HashMap<Component, ComponentNode> components = getComponents(m, graph);
 
             addStartComponents(graph, components, m);

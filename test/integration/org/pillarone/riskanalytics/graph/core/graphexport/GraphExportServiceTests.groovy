@@ -1,10 +1,9 @@
 package org.pillarone.riskanalytics.graph.core.graphexport
 
-import grails.test.*
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
-import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService
+import org.pillarone.riskanalytics.core.FileConstants
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
+import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService
 
 class GraphExportServiceTests extends GroovyTestCase {
 
@@ -113,6 +112,7 @@ public class TestModel
     void testCCToBinary() {
         ComposedComponentGraphModel graph = graphImportService.importGraph(ccFile);
         Map<String, byte[]> classes = graphExportService.exportGraphToBinary(graph);
+        assertTrue classes.keySet().size()>0
         GroovyClassLoader gcl = new GroovyClassLoader();
         for (String name: classes.keySet()) {
             gcl.defineClass(name, classes.get(name));
@@ -122,10 +122,41 @@ public class TestModel
     void testModelToBinary() {
         ModelGraphModel graph = graphImportService.importGraph(modelFile);
         Map<String, byte[]> classes = graphExportService.exportGraphToBinary(graph)
+        assertTrue classes.keySet().size()>0
         GroovyClassLoader gcl = new GroovyClassLoader();
         for (String name: classes.keySet()) {
             gcl.defineClass(name, classes.get(name));
         };
+    }
+
+    void testCCToJAR() {
+        ComposedComponentGraphModel graph = graphImportService.importGraph(ccFile);
+        byte[] content = graphExportService.exportGraphToJAR(graph);
+        assertNotNull content
+        File f = new File(FileConstants.TEMP_FILE_DIRECTORY + File.separator + graph.name + ".jar");
+        f.delete();
+        FileOutputStream fout = new FileOutputStream(f);
+        fout.write(content);
+        fout.close();
+        GroovyClassLoader gcl = new GroovyClassLoader();
+        gcl.addClasspath(f.path);
+        gcl.loadClass(graph.packageName + "." + graph.name);
+    }
+
+
+
+    void testModelToJAR() {
+        ModelGraphModel graph = graphImportService.importGraph(modelFile);
+        byte[] content = graphExportService.exportGraphToJAR(graph);
+        assertNotNull content
+        File f = new File(FileConstants.TEMP_FILE_DIRECTORY + File.separator + graph.name + ".jar");
+        f.delete();
+        FileOutputStream fout = new FileOutputStream(f);
+        fout.write(content);
+        fout.close();
+        GroovyClassLoader gcl = new GroovyClassLoader();
+        gcl.addClasspath(f.path);
+        gcl.loadClass(graph.packageName + "." + graph.name);
     }
 
 

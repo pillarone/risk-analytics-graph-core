@@ -14,7 +14,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 
 public abstract class AbstractGraphExport {
 
-    protected HashMap<String,JFieldVar> fields=new HashMap<String,JFieldVar>();
+    protected HashMap<String,JFieldVar> fields=new HashMap<ComponentNode,JFieldVar>();
 
     public abstract String exportGraph (AbstractGraphModel graph);
 
@@ -22,8 +22,7 @@ public abstract class AbstractGraphExport {
         for (ComponentNode n:graph.allComponentNodes){
             JClass component=codeModel.ref(n.getType().typeClass);
             JFieldVar field=graphClass.field(JMod.NONE,component,n.getName());
-            fields.put(n.getName(),field);
-            field.init(JExpr._new(component));
+            fields.put(n,field);
         }
     }
 
@@ -37,8 +36,8 @@ public abstract class AbstractGraphExport {
             if (c.from.composedComponentOuterPort||c.to.composedComponentOuterPort)
                 continue;
 
-            JFieldVar fromField=fields.get(fromComp.name);
-            JFieldVar toField=fields.get(toComp.name);
+            JFieldVar fromField=fields.get(fromComp);
+            JFieldVar toField=fields.get(toComp);
 
             if (fromField==null || toField==null)
                 continue;

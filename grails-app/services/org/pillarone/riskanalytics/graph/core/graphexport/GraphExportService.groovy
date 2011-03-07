@@ -3,6 +3,7 @@ package org.pillarone.riskanalytics.graph.core.graphexport
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
+import org.pillarone.riskanalytics.graph.core.graphexport.util.JarCreatorUtil
 //
 class GraphExportService {
 
@@ -21,6 +22,10 @@ class GraphExportService {
         JBehaveGroovyClassLoader jgl = new JBehaveGroovyClassLoader();
         jgl.parseClass(content);
         return jgl.getClassBytes();
+    }
+
+    public byte[] exportGraphToJAR(AbstractGraphModel graph){
+         return JarCreatorUtil.createJar(exportGraphToBinary(graph));
     }
 
     private String exportGraphIn(ModelGraphModel graph) {
