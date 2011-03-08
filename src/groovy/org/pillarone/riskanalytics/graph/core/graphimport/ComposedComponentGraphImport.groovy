@@ -10,12 +10,15 @@ import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection
+import org.pillarone.riskanalytics.core.simulation.item.parameter.comment.Comment
 
 public class ComposedComponentGraphImport extends AbstractGraphImport {
 
     @Override
-    public AbstractGraphModel importGraph(Class clazz) {
+    public AbstractGraphModel importGraph(Class clazz, String content) {
         try {
+            commentImport = new CommentImport(content);
             ComposedComponent m = (ComposedComponent) clazz.newInstance();
 
             ComposedComponentGraphModel graph = new ComposedComponentGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
@@ -37,7 +40,7 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
 
 
 
-    protected void addConnections(AbstractGraphModel graph, HashMap<Component, ComponentNode> components, Object graphClass) {
+    protected void addConnections(ComposedComponentGraphModel graph, HashMap<Component, ComponentNode> components, Object graphClass) {
         super.addConnections(graph, components);
         ComposedComponent c = (ComposedComponent) graphClass;
 
@@ -48,8 +51,9 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             if (fromComp == null)
                 continue;
             Port fromP = fromComp.outPorts.find {it.name.equals(fromPort)};
-            Port toP = ((ComposedComponentGraphModel) graph).getOuterOutPorts().find {it.name.equals(outPort)};
-            graph.createConnection(fromP, toP);
+            Port toP = graph.getOuterOutPorts().find {it.name.equals(outPort)};
+            Connection connection = graph.createConnection(fromP, toP);
+            commentImport.getReplicationComment(connection, false);
         }
 
         for (ITransmitter t: c.getAllInputReplicationTransmitter()) {
@@ -59,8 +63,9 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             if (toComp == null)
                 continue;
             Port toP = toComp.inPorts.find {it.name.equals(toPort)};
-            Port fromP = ((ComposedComponentGraphModel) graph).getOuterInPorts().find {it.name.equals(inPort)};
-            graph.createConnection(fromP, toP);
+            Port fromP = graph.getOuterInPorts().find {it.name.equals(inPort)};
+            Connection connection = graph.createConnection(fromP, toP);
+            commentImport.getReplicationComment(connection, true);
         }
     }
 

@@ -9,9 +9,10 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 public class ModelGraphImport extends AbstractGraphImport {
 
     @Override
-    public AbstractGraphModel importGraph(Class clazz) {
+    public AbstractGraphModel importGraph(Class clazz, String content) {
 
         try {
+            commentImport = new CommentImport(content);
             Model m = (Model) clazz.newInstance();
 
             m.init();

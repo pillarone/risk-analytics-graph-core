@@ -71,12 +71,14 @@ public class ComposedComponentGraphExport extends AbstractGraphExport {
                 JFieldVar toField;
                 if (c.to.componentNode != null && (toField = fields.get(c.to.componentNode)) != null) {
                     block.add(toField.ref(c.to.name).assign(JExpr._this().ref(fromField)));
+                    CommentCreator.setReplicationComment(c,block,false);
                 }
             } else if (c.to.composedComponentOuterPort) {
                 JFieldVar toField = outerPorts.get(c.to.name);
                 JFieldVar fromField;
                 if (c.from.componentNode != null && (fromField = fields.get(c.from.componentNode)) != null) {
                     block.add(JExpr._this().ref(toField).assign(fromField.ref(c.from.name)));
+                    CommentCreator.setReplicationComment(c,block,true);
                 }
             }
         }

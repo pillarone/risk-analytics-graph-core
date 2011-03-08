@@ -11,34 +11,52 @@ class GraphExportServiceTests extends GroovyTestCase {
     GraphExportService graphExportService;
 
     String ccFile = """package model;
-
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.packets.PacketList;
 import org.pillarone.riskanalytics.domain.pc.claims.Claim;
 import org.pillarone.riskanalytics.domain.pc.generators.claims.EventClaimsGenerator;
 import org.pillarone.riskanalytics.domain.pc.generators.copulas.EventDependenceStream;
 import org.pillarone.riskanalytics.domain.pc.severities.EventSeverityExtractor;
-
 public class TestCC
     extends ComposedComponent
 {
-
     PacketList<EventDependenceStream> inEventSeverities = new PacketList(EventDependenceStream.class);
     PacketList<Claim> outClaims = new PacketList(Claim.class);
+    /**
+     * Component:subClaimsGenerator
+     * empty comment
+     *
+     */
     EventClaimsGenerator subClaimsGenerator = new EventClaimsGenerator();
+    /**
+     * Component:subSeverityExtractor
+     * empty comment
+     *
+     */
     EventSeverityExtractor subSeverityExtractor = new EventSeverityExtractor();
-
     public void wire() {
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory) {
         this.outClaims = subClaimsGenerator.outClaims;
+        /**
+         * Replication:subClaimsGenerator.outClaims->outClaims
+         * empty comment
+         */
         subSeverityExtractor.inSeverities = this.inEventSeverities;
+        /**
+         * Replication:inEventSeverities->subSeverityExtractor.inSeverities
+         * empty comment
+         */
         }
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.WireCategory) {
+        /**
+         * Connection:subSeverityExtractor.outSeverities->subClaimsGenerator.inSeverities
+         * empty comment
+         */
         subClaimsGenerator.inSeverities = subSeverityExtractor.outSeverities;
         }
     }
-
-}"""
+}
+"""
 
     String modelFile = """package model;
 import org.pillarone.riskanalytics.core.model.StochasticModel;
@@ -54,8 +72,18 @@ public class TestModel
     DynamicUnderwritingSegments underwritingSegments = new DynamicUnderwritingSegments();
     DynamicDevelopedClaimsGenerators claimsGenerators = new DynamicDevelopedClaimsGenerators();
     DynamicConfigurableLobsWithReserves linesOfBusiness = new DynamicConfigurableLobsWithReserves();
+    /**
+     * Component:reserveGenerators
+     * empty comment
+     *
+     */
     DynamicReservesGeneratorLean reserveGenerators = new DynamicReservesGeneratorLean();
     DynamicDependencies dependencies = new DynamicDependencies();
+    /**
+     * Component:eventGenerators
+     * empty comment
+     *
+     */
     DynamicMultipleDependencies eventGenerators = new DynamicMultipleDependencies();
     public void initComponents() {
         addStartComponent underwritingSegments
@@ -67,7 +95,15 @@ public class TestModel
         linesOfBusiness.inUnderwritingInfoGross = underwritingSegments.outUnderwritingInfo;
         linesOfBusiness.inClaimsGross = claimsGenerators.outClaims;
         linesOfBusiness.inClaimsGross = reserveGenerators.outClaimsDevelopment;
+       /**
+         * Connection:claimsGenerators.outClaims->reserveGenerators.inClaims
+         * empty comment
+         */
         reserveGenerators.inClaims = claimsGenerators.outClaims;
+       /**
+         * Connection:underwritingSegments.outUnderwritingInfo->claimsGenerators.inUnderwritingInfo
+         * empty comment
+         */
         claimsGenerators.inUnderwritingInfo = underwritingSegments.outUnderwritingInfo;
         claimsGenerators.inEventSeverities = eventGenerators.outEventSeverities;
     }
@@ -112,7 +148,7 @@ public class TestModel
     void testCCToBinary() {
         ComposedComponentGraphModel graph = graphImportService.importGraph(ccFile);
         Map<String, byte[]> classes = graphExportService.exportGraphToBinary(graph);
-        assertTrue classes.keySet().size()>0
+        assertTrue classes.keySet().size() > 0
         GroovyClassLoader gcl = new GroovyClassLoader();
         for (String name: classes.keySet()) {
             gcl.defineClass(name, classes.get(name));
@@ -122,7 +158,7 @@ public class TestModel
     void testModelToBinary() {
         ModelGraphModel graph = graphImportService.importGraph(modelFile);
         Map<String, byte[]> classes = graphExportService.exportGraphToBinary(graph)
-        assertTrue classes.keySet().size()>0
+        assertTrue classes.keySet().size() > 0
         GroovyClassLoader gcl = new GroovyClassLoader();
         for (String name: classes.keySet()) {
             gcl.defineClass(name, classes.get(name));
