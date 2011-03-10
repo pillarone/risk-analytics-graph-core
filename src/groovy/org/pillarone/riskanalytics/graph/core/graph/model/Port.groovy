@@ -1,6 +1,7 @@
 package org.pillarone.riskanalytics.graph.core.graph.model
 
 import org.pillarone.riskanalytics.core.packets.Packet
+import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange
 
 
 abstract class Port {
@@ -12,6 +13,8 @@ abstract class Port {
     Class<? extends Packet> packetType
     ComponentNode componentNode
     boolean composedComponentOuterPort = false
+    IntegerRange connectionCardinality
+    IntegerRange packetCardinality
 
     final boolean allowedToConnectTo(Port port) {
         if (packetType == port.packetType && componentNode != port.componentNode) {

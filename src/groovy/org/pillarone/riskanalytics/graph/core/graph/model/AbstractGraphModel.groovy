@@ -8,6 +8,7 @@ import java.lang.reflect.Type
 import java.lang.reflect.ParameterizedType
 import org.pillarone.riskanalytics.core.components.Component
 import java.util.Map.Entry
+import org.pillarone.riskanalytics.graph.core.graph.util.WiringValidationUtil
 
 abstract class AbstractGraphModel {
 
@@ -86,8 +87,10 @@ abstract class AbstractGraphModel {
 
     protected List<InPort> obtainInPorts(ComponentNode node) {
         List<InPort> result = []
-        for (Entry<String, Class> entry in obtainPorts(node.type, Port.IN_PORT_PREFIX)) {
-            result << new InPort(name: entry.key, packetType: entry.value, componentNode: node)
+        for (Entry<Field, Class> entry in obtainPorts(node.type, Port.IN_PORT_PREFIX)) {
+            result << new InPort(name: entry.key.name, packetType: entry.value, componentNode: node,
+                    connectionCardinality: WiringValidationUtil.getConnectionCardinality(entry.key),
+                    packetCardinality: WiringValidationUtil.getPacketCardinality(entry.key));
         }
 
         return result
@@ -95,27 +98,28 @@ abstract class AbstractGraphModel {
 
     protected List<OutPort> obtainOutPorts(ComponentNode node) {
         List<OutPort> result = []
-        for (Entry<String, Class> entry in obtainPorts(node.type, Port.OUT_PORT_PREFIX)) {
-            result << new OutPort(name: entry.key, packetType: entry.value, componentNode: node)
+        for (Entry<Field, Class> entry in obtainPorts(node.type, Port.OUT_PORT_PREFIX)) {
+            result << new OutPort(name: entry.key.name, packetType: entry.value, componentNode: node,
+                    connectionCardinality: WiringValidationUtil.getConnectionCardinality(entry.key),
+                    packetCardinality: WiringValidationUtil.getPacketCardinality(entry.key));
         }
 
         return result
     }
 
-    protected Map<String, Class> obtainPorts(ComponentDefinition definition, String prefix) {
+    protected Map<Field, Class> obtainPorts(ComponentDefinition definition, String prefix) {
         Map<String, Class> result = [:]
 
         Class currentClass = definition.typeClass
         while (currentClass != Component.class) {
             for (Field field in currentClass.declaredFields) {
-                String fieldName = field.name
-                if (fieldName.startsWith(prefix) && PacketList.isAssignableFrom(field.type)) {
+                if (field.name.startsWith(prefix) && PacketList.isAssignableFrom(field.type)) {
                     Class packetType = Packet
                     Type genericType = field.genericType
                     if (genericType instanceof ParameterizedType) {
                         packetType = genericType.actualTypeArguments[0]
                     }
-                    result.put(fieldName, packetType)
+                    result.put(field, packetType)
                 }
             }
             currentClass = currentClass.superclass
