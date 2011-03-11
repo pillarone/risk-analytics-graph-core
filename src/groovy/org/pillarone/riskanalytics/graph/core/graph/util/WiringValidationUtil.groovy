@@ -22,4 +22,18 @@ public class WiringValidationUtil {
         }
         return ir;
     }
+
+    public static IntegerRange getEnclosingRange(List<IntegerRange> ranges) {
+        if (ranges.empty)
+            return null;
+        IntegerRange ir = new IntegerRange(from: 0, to: Integer.MAX_VALUE);
+        for (IntegerRange range: ranges) {
+            ir.from = Math.max(ir.from, range.from);
+            ir.to = Math.min(ir.to, range.to);
+        }
+        if (ir.from > ir.to)
+            return null;
+
+        return ir;
+    }
 }

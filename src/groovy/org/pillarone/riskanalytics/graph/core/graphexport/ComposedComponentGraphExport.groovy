@@ -18,6 +18,14 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraph
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
+import org.pillarone.riskanalytics.graph.core.graph.model.InPort
+import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange
+import com.sun.codemodel.JAnnotationUse
+import org.pillarone.riskanalytics.graph.core.palette.annotations.WiringValidation
+import com.sun.codemodel.JAnnotationArrayMember
+import org.pillarone.riskanalytics.graph.core.graph.util.WiringValidationUtil
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 public class ComposedComponentGraphExport extends AbstractGraphExport {
 
@@ -34,7 +42,7 @@ public class ComposedComponentGraphExport extends AbstractGraphExport {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         codeModel.build(new SingleStreamCodeWriter(out));
-        return removeHeader(out.toString());
+        return replaceAnnotationListBrackets(removeHeader(out.toString()));
     }
 
     @Override
@@ -42,7 +50,7 @@ public class ComposedComponentGraphExport extends AbstractGraphExport {
         initOuterPorts(graph, codeModel, graphClass);
         super.initFields(graph, codeModel, graphClass)
         for (ComponentNode c: fields.keySet()) {
-            JFieldVar field= fields.get(c);
+            JFieldVar field = fields.get(c);
             field.init(JExpr._new(field.type()));
         }
     }
@@ -55,6 +63,8 @@ public class ComposedComponentGraphExport extends AbstractGraphExport {
             JClass detailClass = codeModel.ref(p.packetType);
             JClass packetList = rawClass.narrow(detailClass);
             JFieldVar field = ccClass.field(JMod.NONE, packetList, p.getName());
+            if (p instanceof InPort)
+                setWiringAnnotation(graph, field, p);
             outerPorts.put(p.getName(), field);
             field.init(JExpr._new(rawClass).arg(JExpr.dotclass(detailClass)));
         }
@@ -70,15 +80,15 @@ public class ComposedComponentGraphExport extends AbstractGraphExport {
                 JFieldVar fromField = outerPorts.get(c.from.name);
                 JFieldVar toField;
                 if (c.to.componentNode != null && (toField = fields.get(c.to.componentNode)) != null) {
+                    CommentCreator.setReplicationComment(c, block, false);
                     block.add(toField.ref(c.to.name).assign(JExpr._this().ref(fromField)));
-                    CommentCreator.setReplicationComment(c,block,false);
                 }
             } else if (c.to.composedComponentOuterPort) {
                 JFieldVar toField = outerPorts.get(c.to.name);
                 JFieldVar fromField;
                 if (c.from.componentNode != null && (fromField = fields.get(c.from.componentNode)) != null) {
+                    CommentCreator.setReplicationComment(c, block, true);
                     block.add(JExpr._this().ref(toField).assign(fromField.ref(c.from.name)));
-                    CommentCreator.setReplicationComment(c,block,true);
                 }
             }
         }
@@ -87,6 +97,54 @@ public class ComposedComponentGraphExport extends AbstractGraphExport {
         wireFields(graph, block);
         block.directStatement("}");
 
+    }
+
+    private void setWiringAnnotation(ComposedComponentGraphModel graph, JFieldVar field, InPort port) {
+        List<Connection> replicateDst = graph.getAllConnections().findAll {it.from.equals(port)};
+
+        if (!replicateDst.empty) {
+            List<IntegerRange> connectionRange = new ArrayList<IntegerRange>();
+            List<IntegerRange> packetRange = new ArrayList<IntegerRange>();
+            for (Connection c: replicateDst) {
+                InPort p = c.to;
+                if (p.connectionCardinality != null)
+                    connectionRange.add(p.connectionCardinality);
+                if (p.packetCardinality != null) {
+                    packetRange.add(p.packetCardinality);
+                }
+            }
+            IntegerRange cRange = WiringValidationUtil.getEnclosingRange(connectionRange);
+            IntegerRange pRange = WiringValidationUtil.getEnclosingRange(packetRange);
+
+            if (cRange == null && pRange == null)
+                return;
+
+            JAnnotationUse wiringAt = field.annotate(WiringValidation.class);
+
+
+            def ranges = [connections: cRange, packets: pRange]
+
+            for (String key: ranges.keySet()) {
+                if (ranges[key] != null) {
+                    JAnnotationArrayMember cardinality = wiringAt.paramArray(key);
+                    cardinality.param(ranges[key].from);
+                    cardinality.param(ranges[key].to);
+                }
+            }
+
+
+        }
+
+    }
+
+    private String replaceAnnotationListBrackets(String content) {
+        Pattern p = Pattern.compile('\\= \\{(.+?)\\}', Pattern.DOTALL);
+        Matcher mc = p.matcher(content);
+
+        String output = mc.replaceAll('=[$1]');
+        mc = p.matcher(output);
+
+        return mc.replaceAll('=[$1]');
     }
 
 

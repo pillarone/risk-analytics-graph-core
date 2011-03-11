@@ -1,9 +1,13 @@
 package org.pillarone.riskanalytics.graph.core.graphexport
 
 import org.pillarone.riskanalytics.core.FileConstants
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
+import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
+import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange
 import org.pillarone.riskanalytics.graph.core.graphimport.GraphImportService
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 
 class GraphExportServiceTests extends GroovyTestCase {
 
@@ -21,6 +25,7 @@ public class TestCC
     extends ComposedComponent
 {
     PacketList<EventDependenceStream> inEventSeverities = new PacketList(EventDependenceStream.class);
+
     PacketList<Claim> outClaims = new PacketList(Claim.class);
     /**
      * Component:subClaimsGenerator
@@ -34,6 +39,7 @@ public class TestCC
      *
      */
     EventSeverityExtractor subSeverityExtractor = new EventSeverityExtractor();
+    EventSeverityExtractor subSeverityExtractor2 = new EventSeverityExtractor();
     public void wire() {
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory) {
         this.outClaims = subClaimsGenerator.outClaims;
@@ -42,6 +48,7 @@ public class TestCC
          * empty comment
          */
         subSeverityExtractor.inSeverities = this.inEventSeverities;
+        subSeverityExtractor2.inSeverities= this.inEventSeverities;
         /**
          * Replication:inEventSeverities->subSeverityExtractor.inSeverities
          * empty comment
@@ -193,6 +200,41 @@ public class TestModel
         GroovyClassLoader gcl = new GroovyClassLoader();
         gcl.addClasspath(f.path);
         gcl.loadClass(graph.packageName + "." + graph.name);
+    }
+
+
+
+    void testCCAnnotations() {
+        IntegerRange testCRange1 = new IntegerRange(from: 0, to: 2);
+        IntegerRange testCRange2 = new IntegerRange(from: 1, to: 3);
+        IntegerRange testPRange1 = new IntegerRange(from: 1, to: 2);
+        IntegerRange testPRange2 = new IntegerRange(from: 0, to: 1);
+
+        ComposedComponentGraphModel graph = graphImportService.importGraph(ccFile);
+        ComponentNode c = graph.getAllComponentNodes().find {it.name.equals("subSeverityExtractor")};
+        InPort p = c.getInPorts().find {it.name.equals("inSeverities")};
+        p.connectionCardinality = testCRange1
+        p.packetCardinality = testPRange1
+
+        c = graph.getAllComponentNodes().find {it.name.equals("subSeverityExtractor2")};
+        InPort p2 = c.getInPorts().find {it.name.equals("inSeverities")};
+        p2.connectionCardinality = testCRange2
+        p2.packetCardinality = testPRange2
+
+        String ret = graphExportService.exportGraph(graph);
+
+        GroovyClassLoader gcl = new GroovyClassLoader();
+        Class clazz = gcl.parseClass(ret);
+        ComponentNode node = new ComposedComponentGraphModel().createComponentNode(new ComponentDefinition(typeClass: clazz), "name");
+        p = node.inPorts.find {it.name.equals("inEventSeverities")}
+
+        assertTrue((p.connectionCardinality.from == Math.max(testCRange1.from, testCRange2.from)) &&
+                (p.connectionCardinality.to == Math.min(testCRange1.to, testCRange2.to)))
+
+        assertTrue((p.packetCardinality.from == Math.max(testPRange1.from, testPRange2.from)) &&
+                (p.packetCardinality.to == Math.min(testPRange1.to, testPRange2.to)))
+
+
     }
 
 
