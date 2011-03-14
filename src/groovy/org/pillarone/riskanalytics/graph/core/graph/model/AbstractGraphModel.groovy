@@ -8,7 +8,7 @@ import java.lang.reflect.Type
 import java.lang.reflect.ParameterizedType
 import org.pillarone.riskanalytics.core.components.Component
 import java.util.Map.Entry
-import org.pillarone.riskanalytics.graph.core.graph.util.WiringValidationUtil
+import org.pillarone.riskanalytics.graph.core.graph.wiringvalidation.WiringValidationUtil
 
 abstract class AbstractGraphModel {
 
@@ -40,12 +40,15 @@ abstract class AbstractGraphModel {
     void removeComponentNode(ComponentNode toRemove) {
         componentNodes.remove(toRemove)
         Iterator<Connection> iterator = connections.iterator()
+        List<Connection> toRemoveList = new ArrayList<Connection>()
         while (iterator.hasNext()) {
             Connection connection = iterator.next()
             if (connection.from.componentNode == toRemove || connection.to.componentNode == toRemove) {
-                iterator.remove()
+                toRemoveList.add(connection);
             }
         }
+        for (Connection c: toRemoveList)
+            removeConnection(c)
     }
 
     Connection createConnection(Port from, Port to) {
@@ -53,6 +56,10 @@ abstract class AbstractGraphModel {
             throw new IllegalStateException("Cannot connect ${from.packetType.simpleName} to ${to.packetType.simpleName}")
         }
         Connection newConnection = new Connection(from, to)
+        if (!to.composedComponentOuterPort) {
+            if (to instanceof InPort)
+                ((InPort) to).connectionCount++;
+        }
         connections << newConnection
 
         return newConnection
@@ -60,6 +67,10 @@ abstract class AbstractGraphModel {
 
     void removeConnection(Connection connection) {
         connections.remove(connection)
+        if (!connection.to.composedComponentOuterPort) {
+            if (connection.to instanceof InPort)
+                ((InPort) (connection.to)).connectionCount--;
+        }
     }
 
     List<Port> getAvailablePorts(Port portToConnect) {

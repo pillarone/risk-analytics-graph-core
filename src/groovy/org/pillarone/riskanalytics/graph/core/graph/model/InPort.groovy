@@ -7,6 +7,7 @@ import org.apache.commons.logging.Log
 class InPort extends Port {
 
     private static Log LOG = LogFactory.getLog(InPort)
+    int connectionCount=0;
 
     @Override
     protected boolean internalAllowedToConnectTo(Port port) {
@@ -25,5 +26,6 @@ class InPort extends Port {
         LOG.warn("Unknown port found: ${port}")
         return false
     }
+
 
 }

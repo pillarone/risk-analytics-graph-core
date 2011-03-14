@@ -68,28 +68,33 @@ class CommentCreator {
     private static String LINESEP = System.getProperty("line.separator");
 
     public static setComponentComment(ComponentNode componentNode, JDocComment doc) {
-        doc.append("Component:" + componentNode.name + LINESEP + "empty comment");
+        if (componentNode.comment != null)
+            doc.append("Component:" + componentNode.name + LINESEP + componentNode.comment);
     }
 
     public static setConnectionComment(Connection connection, JBlock block) {
-        block.directStatement("/**" + LINESEP);
-        block.directStatement(" * Connection:" + connection.from.componentNode.name + "." + connection.from.name + "->"
-                + connection.to.componentNode.name + "." + connection.to.name + LINESEP);
-        block.directStatement(" * empty comment" + LINESEP);
-        block.directStatement(" */");
+        if (connection.comment != null) {
+            block.directStatement("/**" + LINESEP);
+            block.directStatement(" * Connection:" + connection.from.componentNode.name + "." + connection.from.name + "->"
+                    + connection.to.componentNode.name + "." + connection.to.name + LINESEP);
+            block.directStatement(" * " + connection.comment + LINESEP);
+            block.directStatement(" */");
+        }
     }
 
     public static setReplicationComment(Connection connection, JBlock block, boolean direction) {
-        block.directStatement("/**" + LINESEP);
-        if (direction) {
-            block.directStatement(" * Replication:" + connection.from.componentNode.name + "." + connection.from.name + "->"
-                    + connection.to.name + LINESEP);
-        } else {
-            block.directStatement(" * Replication:" + connection.from.name + "->"
-                    + connection.to.componentNode.name + "." + connection.to.name + LINESEP);
+        if (connection.comment != null) {
+            block.directStatement("/**" + LINESEP);
+            if (direction) {
+                block.directStatement(" * Replication:" + connection.from.componentNode.name + "." + connection.from.name + "->"
+                        + connection.to.name + LINESEP);
+            } else {
+                block.directStatement(" * Replication:" + connection.from.name + "->"
+                        + connection.to.componentNode.name + "." + connection.to.name + LINESEP);
+            }
+            block.directStatement(" * " + connection.comment + LINESEP);
+            block.directStatement(" */");
         }
-        block.directStatement(" * empty comment" + LINESEP);
-        block.directStatement(" */");
 
     }
 }

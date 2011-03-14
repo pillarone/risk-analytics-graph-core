@@ -10,6 +10,7 @@ class ComponentNode {
     ComponentDefinition type
     List<InPort> inPorts
     List<OutPort> outPorts
+    String comment;
 
     private Boolean composedComponent = null
 

@@ -26,7 +26,7 @@ public abstract class AbstractGraphImport {
         for (MetaProperty mp: o.metaClass.getProperties()) {
             if (Component.isAssignableFrom(mp.type)) {
                 ComponentNode n = graph.createComponentNode(PaletteService.getInstance().getComponentDefinition(mp.type), mp.name);
-                commentImport.getComponentComment(n);
+                n.comment = commentImport.getComponentComment(n);
                 components.put(DefaultGroovyMethods.getAt(o, mp.name), n);
             }
         }
@@ -59,7 +59,7 @@ public abstract class AbstractGraphImport {
                 if (fromP != null && toP != null) {
                     if (!visited.get(key)) {
                         Connection connection = graph.createConnection(fromP, toP);
-                        commentImport.getConnectionComment(connection);
+                        connection.comment = commentImport.getConnectionComment(connection);
                         visited.put(key, true);
                     }
                 }

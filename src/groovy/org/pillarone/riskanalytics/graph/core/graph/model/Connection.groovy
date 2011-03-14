@@ -10,6 +10,7 @@ class Connection {
 
     Port from
     Port to
+    String comment
 
     boolean isReplicatingConnection() {
         return from.class == to.class
