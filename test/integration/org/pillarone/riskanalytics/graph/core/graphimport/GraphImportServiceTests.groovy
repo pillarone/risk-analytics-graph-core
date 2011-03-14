@@ -16,24 +16,23 @@ class GraphImportServiceTests extends GroovyTestCase {
 package model;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.packets.PacketList;
-import org.pillarone.riskanalytics.domain.pc.claims.Claim;
-import org.pillarone.riskanalytics.domain.pc.generators.claims.EventClaimsGenerator;
-import org.pillarone.riskanalytics.domain.pc.generators.copulas.EventDependenceStream;
-import org.pillarone.riskanalytics.domain.pc.severities.EventSeverityExtractor;
+import org.pillarone.riskanalytics.core.packets.Packet;
+import org.pillarone.riskanalytics.core.example.component.ExampleInputOutputComponent
+
 public class TestCC
     extends ComposedComponent
 {
-    PacketList<EventDependenceStream> inEventSeverities = new PacketList(EventDependenceStream.class);
-    PacketList<Claim> outClaims = new PacketList(Claim.class);
-    EventSeverityExtractor subSeverityExtractor = new EventSeverityExtractor();
-    EventClaimsGenerator subClaimsGenerator = new EventClaimsGenerator();
+    PacketList<Packet> inEventSeverities = new PacketList(Packet.class);
+    PacketList<Packet> outClaims = new PacketList(Packet.class);
+    ExampleInputOutputComponent subSeverityExtractor = new ExampleInputOutputComponent();
+    ExampleInputOutputComponent subClaimsGenerator = new ExampleInputOutputComponent();
     public void wire() {
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory) {
-        this.outClaims = subClaimsGenerator.outClaims;
-        subSeverityExtractor.inSeverities = this.inEventSeverities;
+        this.outClaims = subClaimsGenerator.outValue;
+        subSeverityExtractor.inValue = this.inEventSeverities;
         }
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.WireCategory) {
-        subClaimsGenerator.inSeverities = subSeverityExtractor.outSeverities;
+        subClaimsGenerator.inValue = subSeverityExtractor.outValue;
         }
     }
 }
@@ -54,49 +53,29 @@ public class TestCC
 package model
 
 import org.pillarone.riskanalytics.core.model.StochasticModel
-import org.pillarone.riskanalytics.domain.pc.aggregators.AlmResultAggregator
-import org.pillarone.riskanalytics.domain.pc.assetLiabilityMismatch.DynamicAssetLiabilityMismatchGenerator
-import org.pillarone.riskanalytics.domain.pc.generators.claims.DynamicDevelopedClaimsGenerators
-import org.pillarone.riskanalytics.domain.pc.generators.copulas.DynamicDependencies
-import org.pillarone.riskanalytics.domain.pc.generators.copulas.DynamicMultipleDependencies
-import org.pillarone.riskanalytics.domain.pc.lob.DynamicConfigurableLobsWithReserves
-import org.pillarone.riskanalytics.domain.pc.reinsurance.programs.ReinsuranceWithBouquetCommissionProgram
-import org.pillarone.riskanalytics.domain.pc.reserves.fasttrack.DynamicReservesGeneratorLean
-import org.pillarone.riskanalytics.domain.pc.underwriting.DynamicUnderwritingSegments
-import org.pillarone.riskanalytics.domain.pc.filter.DynamicSegmentFilters
+import org.pillarone.riskanalytics.core.example.component.ExampleInputOutputComponent
 
 class TestModel extends StochasticModel {
 
-    DynamicUnderwritingSegments underwritingSegments
-    DynamicDevelopedClaimsGenerators claimsGenerators
-    DynamicReservesGeneratorLean reserveGenerators
-    DynamicDependencies dependencies
-    DynamicMultipleDependencies eventGenerators
-    DynamicConfigurableLobsWithReserves linesOfBusiness
+    ExampleInputOutputComponent underwritingSegments
+    ExampleInputOutputComponent claimsGenerators
+    ExampleInputOutputComponent linesOfBusiness
 
 
     void initComponents() {
-        underwritingSegments = new DynamicUnderwritingSegments()
-        claimsGenerators = new DynamicDevelopedClaimsGenerators()
-        reserveGenerators = new DynamicReservesGeneratorLean()
-        dependencies = new DynamicDependencies()
-        eventGenerators = new DynamicMultipleDependencies()
-        linesOfBusiness = new DynamicConfigurableLobsWithReserves()
+        underwritingSegments = new ExampleInputOutputComponent()
+        claimsGenerators = new ExampleInputOutputComponent()
+        linesOfBusiness = new ExampleInputOutputComponent()
 
         addStartComponent underwritingSegments
-        addStartComponent dependencies
-        addStartComponent eventGenerators
+        addStartComponent claimsGenerators
     }
 
     void wireComponents() {
-        claimsGenerators.inUnderwritingInfo = underwritingSegments.outUnderwritingInfo
-        claimsGenerators.inProbabilities = dependencies.outProbabilities
-        claimsGenerators.inEventSeverities = eventGenerators.outEventSeverities
-        reserveGenerators.inClaims = claimsGenerators.outClaims
+        claimsGenerators.inValue = underwritingSegments.outValue
 
-        linesOfBusiness.inUnderwritingInfoGross = underwritingSegments.outUnderwritingInfo
-        linesOfBusiness.inClaimsGross = claimsGenerators.outClaims
-        linesOfBusiness.inClaimsGross = reserveGenerators.outClaimsDevelopment
+        linesOfBusiness.inValue = claimsGenerators.outValue
+        linesOfBusiness.inValue = underwritingSegments.outValue
     }
 }
 
@@ -104,8 +83,8 @@ class TestModel extends StochasticModel {
 
         AbstractGraphModel graph = graphImportService.importGraph(modelFile);
 
-        assertEquals 6, graph.allComponentNodes.size()
-        assertEquals 7, graph.allConnections.size()
-        assertEquals 3, ((ModelGraphModel) graph).startComponents.size()
+        assertEquals 3, graph.allComponentNodes.size()
+        assertEquals 3, graph.allConnections.size()
+        assertEquals 2, ((ModelGraphModel) graph).startComponents.size()
     }
 }

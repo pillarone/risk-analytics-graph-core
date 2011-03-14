@@ -7,32 +7,44 @@ class PaletteServiceTests extends GroovyTestCase {
     String ccFile = """
 package model;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
+import org.pillarone.riskanalytics.core.example.component.ExampleInputOutputComponent;
+import org.pillarone.riskanalytics.core.packets.Packet;
 import org.pillarone.riskanalytics.core.packets.PacketList;
-import org.pillarone.riskanalytics.domain.pc.claims.Claim;
-import org.pillarone.riskanalytics.domain.pc.generators.claims.EventClaimsGenerator;
-import org.pillarone.riskanalytics.domain.pc.generators.copulas.EventDependenceStream;
-import org.pillarone.riskanalytics.domain.pc.severities.EventSeverityExtractor;
 import org.pillarone.riskanalytics.graph.core.palette.annotations.ComponentCategory;
 
 @ComponentCategory(categories=["CAT1","CAT2"])
 public class TestCC
     extends ComposedComponent
 {
-    PacketList<EventDependenceStream> inEventSeverities = new PacketList(EventDependenceStream.class);
-    PacketList<Claim> outClaims = new PacketList(Claim.class);
-    EventSeverityExtractor subSeverityExtractor = new EventSeverityExtractor();
-    EventClaimsGenerator subClaimsGenerator = new EventClaimsGenerator();
+    PacketList<Packet> inEventSeverities = new PacketList(Packet.class);
+    PacketList<Packet> outClaims = new PacketList(Packet.class);
+
+    ExampleInputOutputComponent subClaimsGenerator = new ExampleInputOutputComponent();
+    ExampleInputOutputComponent subSeverityExtractor = new ExampleInputOutputComponent();
+    /**
+     * Component:subSeverityExtractor2
+     * empty
+     */
+    ExampleInputOutputComponent subSeverityExtractor2 = new ExampleInputOutputComponent();
     public void wire() {
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory) {
-        this.outClaims = subClaimsGenerator.outClaims;
-        subSeverityExtractor.inSeverities = this.inEventSeverities;
+        /**
+         * Replication:subClaimsGenerator.outValue->outClaims
+         * empty
+         */
+        this.outClaims = subClaimsGenerator.outValue;
+        subSeverityExtractor.inValue = this.inEventSeverities;
+        subSeverityExtractor2 .inValue = this.inEventSeverities;
         }
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.WireCategory) {
-        subClaimsGenerator.inSeverities = subSeverityExtractor.outSeverities;
+        /**
+         * Connection:subSeverityExtractor.outValue->subClaimsGenerator.inValue
+         * empty
+         */
+        subClaimsGenerator.inValue = subSeverityExtractor.outValue;
         }
     }
-}
-        """
+}        """
 
    void testGetComponents() {
         PaletteService service = PaletteService.getInstance()

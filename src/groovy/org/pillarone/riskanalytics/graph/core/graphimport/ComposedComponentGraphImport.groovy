@@ -53,7 +53,7 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             Port fromP = fromComp.outPorts.find {it.name.equals(fromPort)};
             Port toP = graph.getOuterOutPorts().find {it.name.equals(outPort)};
             Connection connection = graph.createConnection(fromP, toP);
-            commentImport.getReplicationComment(connection, false);
+            connection.comment=commentImport.getReplicationComment(connection, false);
         }
 
         for (ITransmitter t: c.getAllInputReplicationTransmitter()) {
@@ -65,7 +65,7 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             Port toP = toComp.inPorts.find {it.name.equals(toPort)};
             Port fromP = graph.getOuterInPorts().find {it.name.equals(inPort)};
             Connection connection = graph.createConnection(fromP, toP);
-            commentImport.getReplicationComment(connection, true);
+            connection.comment=commentImport.getReplicationComment(connection, true);
         }
     }
 

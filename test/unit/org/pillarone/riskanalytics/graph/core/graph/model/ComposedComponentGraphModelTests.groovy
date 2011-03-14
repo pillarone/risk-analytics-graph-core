@@ -10,37 +10,47 @@ class ComposedComponentGraphModelTests extends GroovyTestCase {
 
 
     String ccFile = """
-   package model;
-   import org.pillarone.riskanalytics.core.components.ComposedComponent;
-   import org.pillarone.riskanalytics.core.packets.PacketList;
-   import org.pillarone.riskanalytics.domain.pc.claims.Claim;
-   import org.pillarone.riskanalytics.domain.pc.generators.claims.EventClaimsGenerator;
-   import org.pillarone.riskanalytics.domain.pc.generators.copulas.EventDependenceStream;
-   import org.pillarone.riskanalytics.domain.pc.severities.EventSeverityExtractor;
-   import org.pillarone.riskanalytics.graph.core.palette.annotations.ComponentCategory;
-   import org.pillarone.riskanalytics.graph.core.palette.annotations.WiringValidation
+package model;
+import org.pillarone.riskanalytics.core.components.ComposedComponent;
+import org.pillarone.riskanalytics.core.example.component.ExampleInputOutputComponent;
+import org.pillarone.riskanalytics.core.packets.Packet;
+import org.pillarone.riskanalytics.core.packets.PacketList;
+import org.pillarone.riskanalytics.graph.core.palette.annotations.WiringValidation
+public class TestCC
+    extends ComposedComponent
+{
+    @WiringValidation(connections=[0,1],packets=[1,2])
+    PacketList<Packet> inEventSeverities = new PacketList(Packet.class);
+    @WiringValidation(connections=[1,2],packets=[0,2])
+    PacketList<Packet> outClaims = new PacketList(Packet.class);
 
-   @ComponentCategory(categories=["CAT1","CAT2"])
-   public class TestCC
-       extends ComposedComponent
-   {
-       @WiringValidation(connections=[1,1],packets=[1,10])
-       PacketList<EventDependenceStream> inEventSeverities = new PacketList(EventDependenceStream.class);
-       @WiringValidation(connections=[0,1],packets=[0,1])
-       PacketList<Claim> outClaims = new PacketList(Claim.class);
-       EventSeverityExtractor subSeverityExtractor = new EventSeverityExtractor();
-       EventClaimsGenerator subClaimsGenerator = new EventClaimsGenerator();
-       public void wire() {
-           org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory) {
-           this.outClaims = subClaimsGenerator.outClaims;
-           subSeverityExtractor.inSeverities = this.inEventSeverities;
-           }
-           org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.WireCategory) {
-           subClaimsGenerator.inSeverities = subSeverityExtractor.outSeverities;
-           }
-       }
-   }
-           """
+
+    ExampleInputOutputComponent subClaimsGenerator = new ExampleInputOutputComponent();
+    ExampleInputOutputComponent subSeverityExtractor = new ExampleInputOutputComponent();
+    /**
+     * Component:subSeverityExtractor2
+     * empty
+     */
+    ExampleInputOutputComponent subSeverityExtractor2 = new ExampleInputOutputComponent();
+    public void wire() {
+        org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory) {
+        /**
+         * Replication:subClaimsGenerator.outValue->outClaims
+         * empty
+         */
+        this.outClaims = subClaimsGenerator.outValue;
+        subSeverityExtractor.inValue = this.inEventSeverities;
+        subSeverityExtractor2 .inValue = this.inEventSeverities;
+        }
+        org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.WireCategory) {
+        /**
+         * Connection:subSeverityExtractor.outValue->subClaimsGenerator.inValue
+         * empty
+         */
+        subClaimsGenerator.inValue = subSeverityExtractor.outValue;
+        }
+    }
+}        """
 
     void testCreateOuterPorts() {
         ComposedComponentGraphModel model = new ComposedComponentGraphModel()
@@ -90,9 +100,9 @@ class ComposedComponentGraphModelTests extends GroovyTestCase {
         GroovyClassLoader gcl = new GroovyClassLoader();
         Class clazz = gcl.parseClass(ccFile);
         ComponentNode node = model.createComponentNode(new ComponentDefinition(typeClass: clazz), "name");
-        assertTrue node.getPort("inEventSeverities").connectionCardinality.from == 1
-        assertTrue node.getPort("outClaims").connectionCardinality.to == 1
-        assertTrue node.getPort("inEventSeverities").packetCardinality.to == 10
+        assertTrue node.getPort("inEventSeverities").connectionCardinality.from == 0
+        assertTrue node.getPort("outClaims").connectionCardinality.to == 2
+        assertTrue node.getPort("inEventSeverities").packetCardinality.to == 2
         assertTrue node.getPort("outClaims").packetCardinality.from == 0
     }
 
