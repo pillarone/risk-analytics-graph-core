@@ -47,6 +47,7 @@ public abstract class AbstractGraphImport {
                 ComponentNode toComp = components.get(t.getReceiver());
                 ComponentNode fromComp = components.get(t.getSender());
 
+                //if ComposedComponent port, no Component found
                 if (toComp == null || fromComp == null) {
                     continue;
                 }
