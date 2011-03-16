@@ -16,7 +16,7 @@ public abstract class AbstractGraphImport {
 
     protected CommentImport commentImport;
 
-    public abstract AbstractGraphModel importGraph(Class clazz, String content)
+    public abstract AbstractGraphModel importGraph(Class clazz, String comments)
 
     ;
 
@@ -76,7 +76,8 @@ class CommentImport {
     private HashMap<String, String> comments = new HashMap<String, String>();
 
     public CommentImport(String content) {
-        structureComments(content);
+        if (content != null)
+            structureComments(content);
     }
 
     public String getComponentComment(ComponentNode componentNode) {

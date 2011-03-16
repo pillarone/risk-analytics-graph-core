@@ -11,14 +11,13 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
-import org.pillarone.riskanalytics.core.simulation.item.parameter.comment.Comment
 
 public class ComposedComponentGraphImport extends AbstractGraphImport {
 
     @Override
-    public AbstractGraphModel importGraph(Class clazz, String content) {
+    public AbstractGraphModel importGraph(Class clazz, String comments) {
         try {
-            commentImport = new CommentImport(content);
+            commentImport = new CommentImport(comments);
             ComposedComponent m = (ComposedComponent) clazz.newInstance();
 
             ComposedComponentGraphModel graph = new ComposedComponentGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
