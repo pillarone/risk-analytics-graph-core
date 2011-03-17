@@ -20,6 +20,8 @@ abstract class AbstractGraphModel {
     private List<ComponentNode> componentNodes = []
     private List<Connection> connections = []
 
+    private List<IGraphModelChangeListener> graphModelChangeListeners = []
+
     AbstractGraphModel() {
     }
 
@@ -28,17 +30,30 @@ abstract class AbstractGraphModel {
         this.packageName = packageName
     }
 
+    void addGraphModelChangeListener(IGraphModelChangeListener listener) {
+        graphModelChangeListeners << listener
+    }
+
+    void removeGraphModelChangeListener(IGraphModelChangeListener listener) {
+        graphModelChangeListeners.remove(listener)
+    }
+
     ComponentNode createComponentNode(ComponentDefinition definition, String name) {
         ComponentNode newNode = new ComponentNode(type: definition, name: name)
         newNode.inPorts = Collections.unmodifiableList(obtainInPorts(newNode))
         newNode.outPorts = Collections.unmodifiableList(obtainOutPorts(newNode))
         componentNodes << newNode
 
+        graphModelChangeListeners*.nodeAdded(newNode)
+
         return newNode
     }
 
     void removeComponentNode(ComponentNode toRemove) {
         componentNodes.remove(toRemove)
+
+        graphModelChangeListeners*.nodeRemoved(toRemove)
+
         Iterator<Connection> iterator = connections.iterator()
         List<Connection> toRemoveList = new ArrayList<Connection>()
         while (iterator.hasNext()) {
@@ -62,6 +77,8 @@ abstract class AbstractGraphModel {
         }
         connections << newConnection
 
+        graphModelChangeListeners*.connectionAdded(newConnection)
+
         return newConnection
     }
 
@@ -71,6 +88,8 @@ abstract class AbstractGraphModel {
             if (connection.to instanceof InPort)
                 ((InPort) (connection.to)).connectionCount--;
         }
+
+        graphModelChangeListeners*.connectionRemoved(connection)
     }
 
     List<Port> getAvailablePorts(Port portToConnect) {
