@@ -27,6 +27,34 @@ class ComposedComponentGraphModel extends AbstractGraphModel {
         return outPort
     }
 
+    void addOuterPort(Port port) {
+        if (port instanceof InPort) {
+            outerInPorts << port;
+        } else {
+            outerOutPorts << port;
+        }
+    }
+
+    public void removeOuterPort(Port port) {
+        if (port instanceof InPort) {
+            outerInPorts.remove(port);
+        } else {
+            outerOutPorts.remove(port);
+        }
+
+        List<Connection> toRemoveList = new ArrayList<Connection>()
+        for (Connection c: connections) {
+            if (c.from == port || c.to == port) {
+                toRemoveList.add(c);
+            }
+        }
+
+        for (Connection c: toRemoveList) {
+            removeConnection(c);
+        }
+
+    }
+
     @Override
     List<Port> getAvailablePorts(Port portToConnect) {
         List<Port> innerPorts = super.getAvailablePorts(portToConnect)

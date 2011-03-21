@@ -17,8 +17,8 @@ abstract class AbstractGraphModel {
     String name
     String packageName
 
-    private List<ComponentNode> componentNodes = []
-    private List<Connection> connections = []
+    protected List<ComponentNode> componentNodes = []
+    protected List<Connection> connections = []
 
     private List<IGraphModelChangeListener> graphModelChangeListeners = []
 
@@ -49,6 +49,14 @@ abstract class AbstractGraphModel {
         return newNode
     }
 
+    void addComponentNode(ComponentNode componentNode) {
+        if (componentNodes.find {it.equals(componentNode)} != null) {
+            throw new IllegalStateException("ComponentNode " + componentNode + " already exists")
+        }
+        componentNodes.add(componentNode);
+        graphModelChangeListeners*.nodeAdded(componentNode)
+    }
+
     void removeComponentNode(ComponentNode toRemove) {
         componentNodes.remove(toRemove)
 
@@ -67,6 +75,10 @@ abstract class AbstractGraphModel {
     }
 
     Connection createConnection(Port from, Port to) {
+        if (connections.find {it.from == from && it.to == to} != null) {
+            throw new IllegalStateException("Connection " + from.componentNode + "." + from + "->" + to.componentNode + "." + to + " already exists")
+        }
+
         if (!from.allowedToConnectTo(to)) {
             throw new IllegalStateException("Cannot connect ${from.packetType.simpleName} to ${to.packetType.simpleName}")
         }
