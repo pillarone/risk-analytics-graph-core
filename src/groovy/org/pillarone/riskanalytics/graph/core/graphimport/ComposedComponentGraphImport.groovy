@@ -6,38 +6,31 @@ import org.pillarone.riskanalytics.core.components.ComposedComponent
 import org.pillarone.riskanalytics.core.packets.PacketList
 import org.pillarone.riskanalytics.core.wiring.ITransmitter
 import org.pillarone.riskanalytics.core.wiring.WiringUtils
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
-import org.pillarone.riskanalytics.graph.core.graph.model.Port
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection
+import org.pillarone.riskanalytics.graph.core.graph.model.*
 
 public class ComposedComponentGraphImport extends AbstractGraphImport {
 
     @Override
     public AbstractGraphModel importGraph(Class clazz, String comments) {
-        try {
-            commentImport = new CommentImport(comments);
-            ComposedComponent m = (ComposedComponent) clazz.newInstance();
 
-            ComposedComponentGraphModel graph = new ComposedComponentGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
-            HashMap<Component, ComponentNode> components = getComponents(m, graph);
+        commentImport = new CommentImport(comments);
+        ComposedComponent cc = (ComposedComponent) clazz.newInstance();
 
+        cc.wire();
 
-            addOuterPorts(graph, m);
-
-            m.wire();
-
-            addConnections(graph, components, m);
-            return graph;
-
-        } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            return null;
-        }
+        return createFromWiredComponent(cc);
     }
 
 
+    
+    public ComposedComponentGraphModel createFromWiredComponent(ComposedComponent cc) {
+        commentImport = new CommentImport(null);
+        ComposedComponentGraphModel graph = new ComposedComponentGraphModel(cc.getClass().getSimpleName(), cc.getClass().getPackage().name);
+        HashMap<Component, ComponentNode> components = getComponents(cc.allSubComponents(),cc, graph);
+        addOuterPorts(graph, cc);
+        addConnections(graph, components, cc);
+        return graph;
+    }
 
     protected void addConnections(ComposedComponentGraphModel graph, HashMap<Component, ComponentNode> components, Object graphClass) {
         super.addConnections(graph, components);
@@ -52,7 +45,7 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             Port fromP = fromComp.outPorts.find {it.name.equals(fromPort)};
             Port toP = graph.getOuterOutPorts().find {it.name.equals(outPort)};
             Connection connection = graph.createConnection(fromP, toP);
-            connection.comment=commentImport.getReplicationComment(connection, false);
+            connection.comment = commentImport.getReplicationComment(connection, false);
         }
 
         for (ITransmitter t: c.getAllInputReplicationTransmitter()) {
@@ -64,7 +57,7 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             Port toP = toComp.inPorts.find {it.name.equals(toPort)};
             Port fromP = graph.getOuterInPorts().find {it.name.equals(inPort)};
             Connection connection = graph.createConnection(fromP, toP);
-            connection.comment=commentImport.getReplicationComment(connection, true);
+            connection.comment = commentImport.getReplicationComment(connection, true);
         }
     }
 
