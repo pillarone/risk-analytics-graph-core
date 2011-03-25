@@ -1,8 +1,5 @@
 package org.pillarone.riskanalytics.graph.core.graph.model
 
-import org.pillarone.riskanalytics.core.packets.Packet
-
-
 class ComposedComponentGraphModel extends AbstractGraphModel {
 
     private List<InPort> outerInPorts = []
@@ -15,13 +12,13 @@ class ComposedComponentGraphModel extends AbstractGraphModel {
         super(name, packageName)
     }
 
-    InPort createOuterInPort(Class<? extends Packet> packetClass, String name) {
+    InPort createOuterInPort(Class packetClass, String name) {
         InPort inPort = new InPort(packetType: packetClass, name: name, composedComponentOuterPort: true)
         outerInPorts << inPort
         return inPort
     }
 
-    OutPort createOuterOutPort(Class<? extends Packet> packetClass, String name) {
+    OutPort createOuterOutPort(Class packetClass, String name) {
         OutPort outPort = new OutPort(packetType: packetClass, name: name, composedComponentOuterPort: true)
         outerOutPorts << outPort
         return outPort
