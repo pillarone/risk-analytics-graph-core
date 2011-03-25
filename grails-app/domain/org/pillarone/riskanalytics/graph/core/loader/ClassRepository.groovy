@@ -8,4 +8,8 @@ class ClassRepository {
     String toString() {
         name
     }
+
+    static constraints = {
+        data(maxSize: 20000)
+    }
 }
