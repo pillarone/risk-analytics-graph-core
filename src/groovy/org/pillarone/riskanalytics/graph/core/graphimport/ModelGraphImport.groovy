@@ -11,20 +11,18 @@ public class ModelGraphImport extends AbstractGraphImport {
     @Override
     public AbstractGraphModel importGraph(Class clazz, String comments) {
 
-        commentImport = new CommentImport(comments);
         Model m = (Model) clazz.newInstance();
         m.init();
         m.wire();
-
+        if (comments != null) addGraphImportListener(new CommentImport(comments));
         return createFromWiredModel(m);
 
     }
 
 
     public ModelGraphModel createFromWiredModel(Model m) {
-        commentImport = new CommentImport(null);
         ModelGraphModel graph = new ModelGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
-        HashMap<Component, ComponentNode> components = getComponents(m.allComponents,m, graph);
+        HashMap<Component, ComponentNode> components = getComponents(m.allComponents, m, graph);
         addStartComponents(graph, components, m);
         addConnections(graph, components);
         return graph;

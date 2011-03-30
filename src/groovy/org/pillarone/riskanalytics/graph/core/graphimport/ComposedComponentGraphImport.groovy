@@ -13,18 +13,17 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
     @Override
     public AbstractGraphModel importGraph(Class clazz, String comments) {
 
-        commentImport = new CommentImport(comments);
         ComposedComponent cc = (ComposedComponent) clazz.newInstance();
 
         cc.wire();
 
+        if (comments != null) addGraphImportListener(new CommentImport(comments));
         return createFromWiredComponent(cc);
     }
 
 
     
     public ComposedComponentGraphModel createFromWiredComponent(ComposedComponent cc) {
-        commentImport = new CommentImport(null);
         ComposedComponentGraphModel graph = new ComposedComponentGraphModel(cc.getClass().getSimpleName(), cc.getClass().getPackage().name);
         HashMap<Component, ComponentNode> components = getComponents(cc.allSubComponents(),cc, graph);
         addOuterPorts(graph, cc);
@@ -45,7 +44,7 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             Port fromP = fromComp.outPorts.find {it.name.equals(fromPort)};
             Port toP = graph.getOuterOutPorts().find {it.name.equals(outPort)};
             Connection connection = graph.createConnection(fromP, toP);
-            connection.comment = commentImport.getReplicationComment(connection, false);
+            importListeners.each{it.connectionImported(connection)};
         }
 
         for (ITransmitter t: c.getAllInputReplicationTransmitter()) {
@@ -57,7 +56,7 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             Port toP = toComp.inPorts.find {it.name.equals(toPort)};
             Port fromP = graph.getOuterInPorts().find {it.name.equals(inPort)};
             Connection connection = graph.createConnection(fromP, toP);
-            connection.comment = commentImport.getReplicationComment(connection, true);
+            importListeners.each{it.connectionImported(connection)};
         }
     }
 

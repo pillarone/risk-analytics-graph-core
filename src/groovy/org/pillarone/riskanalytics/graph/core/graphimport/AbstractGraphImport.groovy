@@ -18,10 +18,14 @@ import org.pillarone.riskanalytics.graph.core.graph.model.OutPort
 
 public abstract class AbstractGraphImport {
 
-    protected CommentImport commentImport;
+    protected List<GraphImportListener> importListeners = new ArrayList<GraphImportListener>();
 
     public abstract AbstractGraphModel importGraph(Class clazz, String comments)
 
+
+    public void addGraphImportListener(GraphImportListener importListener) {
+        importListeners.add(importListener);
+    }
 
     protected ComposedComponentNode createComposedComponentNode(ComposedComponent cc, String name) {
         ComposedComponentNode cn = new ComposedComponentNode(name: name, type: PaletteService.getInstance().getComponentDefinition(cc.class));
@@ -44,7 +48,7 @@ public abstract class AbstractGraphImport {
         return cn;
     }
 
-    protected HashMap<Component, ComponentNode> getComponents(List<Component> subComponents,Object componentContainer, AbstractGraphModel graph) {
+    protected HashMap<Component, ComponentNode> getComponents(List<Component> subComponents, Object componentContainer, AbstractGraphModel graph) {
         HashMap<Component, ComponentNode> components = new HashMap<Component, ComponentNode>();
         for (Component c: subComponents) {
             String name = componentContainer.properties.find {Map.Entry entry -> entry.value.is(c)}.key;
@@ -55,7 +59,7 @@ public abstract class AbstractGraphImport {
             } else {
                 n = graph.createComponentNode(PaletteService.getInstance().getComponentDefinition(c.class), name);
             }
-            n.comment = commentImport.getComponentComment(n);
+            importListeners.each {it.nodeImported(n)};
             components.put(c, n);
         }
         return components;
@@ -88,7 +92,7 @@ public abstract class AbstractGraphImport {
                 if (fromP != null && toP != null) {
                     if (!visited.get(key)) {
                         Connection connection = graph.createConnection(fromP, toP);
-                        connection.comment = commentImport.getConnectionComment(connection);
+                        importListeners.each {it.connectionImported(connection)};
                         visited.put(key, true);
                     }
                 }
@@ -100,30 +104,11 @@ public abstract class AbstractGraphImport {
 
 }
 
-class CommentImport {
+class CommentImport implements GraphImportListener {
     private HashMap<String, String> comments = new HashMap<String, String>();
 
     public CommentImport(String content) {
-        if (content != null)
-            structureComments(content);
-    }
-
-    public String getComponentComment(ComponentNode componentNode) {
-        return comments.get("Component:" + componentNode.name);
-    }
-
-    public String getConnectionComment(Connection connection) {
-        return comments.get("Connection:" + connection.from.componentNode.name + "." + connection.from.name +
-                "->" + connection.to.componentNode.name + "." + connection.to.name);
-    }
-
-    public String getReplicationComment(Connection connection, boolean direction) {
-        if (direction)
-            return comments.get("Replication:" + connection.from.name +
-                    "->" + connection.to.componentNode.name + "." + connection.to.name);
-        else
-            return comments.get("Replication:" + connection.from.componentNode.name + "." + connection.from.name +
-                    "->" + connection.to.name);
+        structureComments(content);
     }
 
     private void structureComments(String content) {
@@ -140,5 +125,33 @@ class CommentImport {
                 continue;
             }
         }
+    }
+
+    void nodeImported(ComponentNode node) {
+        node.comment = comments.get("Component:" + getComponentKey(node));
+    }
+
+    void connectionImported(Connection connection) {
+        List<String> connectionHeaders = new ArrayList<String>();
+        connectionHeaders.add("Connection:" + getComponentKey(connection.from.componentNode) + "." + connection.from.name +
+                "->" + getComponentKey(connection.to.componentNode) + "." + connection.to.name);
+        connectionHeaders.add("Replication:" + connection.from.name + "->" +
+                getComponentKey(connection.to.componentNode) + "." + connection.to.name);
+        connectionHeaders.add("Replication:" + getComponentKey(connection.from.componentNode) + "." + connection.from.name +
+                "->" + connection.to.name);
+        for (String key: connectionHeaders) {
+            String s;
+            if ((s = comments.get(key)) != null) {
+                connection.comment = s;
+                break;
+            }
+        }
+    }
+
+    private String getComponentKey(ComponentNode c) {
+        if (c != null)
+            return c.name;
+        else
+            return "";
     }
 }
