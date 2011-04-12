@@ -1,15 +1,12 @@
 package org.pillarone.riskanalytics.graph.core.graph.wiringvalidation
 
 import java.lang.reflect.Field
-import org.pillarone.riskanalytics.graph.core.palette.annotations.WiringValidation
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange
-import org.pillarone.riskanalytics.graph.core.graph.model.InPort
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
+import org.pillarone.riskanalytics.graph.core.palette.annotations.WiringValidation
 
 public class WiringValidationUtil {
 
-    private List<WiringValidationRule> rules = new ArrayList<WiringValidationRule>();
+
 
     public static IntegerRange getConnectionCardinality(Field field) {
         IntegerRange ir;
@@ -42,35 +39,4 @@ public class WiringValidationUtil {
 
         return ir;
     }
-
-    public WiringValidationUtil() {
-        rules.add(new WiringValidationRule() {
-            boolean isValid(InPort port) {
-                return port.connectionCardinality == null ? true :
-                    (port.connectionCount >= port.connectionCardinality.from && port.connectionCount <= port.connectionCardinality.to);
-            }
-
-        });
-
-    }
-
-    public List<InPort> validateWiring(AbstractGraphModel graph) {
-        List<InPort> notValidPorts = new ArrayList<InPort>();
-        for (ComponentNode c: graph.getAllComponentNodes()) {
-            for (InPort p: c.inPorts) {
-                boolean valid = true;
-                for (WiringValidationRule wvr: rules) {
-                    valid = valid & wvr.isValid(p);
-                }
-                if (!valid) {
-                    notValidPorts.add(p);
-                }
-            }
-        }
-        return notValidPorts;
-    }
-}
-
-interface WiringValidationRule {
-    public boolean isValid(InPort port)
 }
