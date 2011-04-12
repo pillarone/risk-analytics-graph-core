@@ -59,13 +59,14 @@ public abstract class AbstractDynamicGraphImport {
             for (ComponentPortTuple inTuple: inTuples) {
                 addComponentNode(src, outTuple.component);
                 addComponentNode(src, inTuple.component);
-                new ParameterConstraints().isWired(outTuple.component, inTuple.component);
+                if (ComposedComponent.isAssignableFrom(inTuple.component.class))
+                    isComposedWired(outTuple.component, inTuple.component,inTuple.port);
                 wireConcreteComponents(outTuple.component, inTuple.component, outTuple.port, inTuple.port);
             }
         }
     }
 
-    protected List<ComponentPortTuple> getReplicatedInputs(DynamicComposedComponent dst, PacketList dstPort) {
+    protected List<ComponentPortTuple> getReplicatedInputs(ComposedComponent dst, PacketList dstPort) {
         List<ComponentPortTuple> components = new ArrayList<ComponentPortTuple>();
         String receivingName = WiringUtils.getSenderChannelName(dst, dstPort);
         for (Transmitter t: dst.allInputReplicationTransmitter) {
@@ -77,7 +78,7 @@ public abstract class AbstractDynamicGraphImport {
         return components;
     }
 
-    protected List<ComponentPortTuple> getReplicatedOutputs(DynamicComposedComponent src, PacketList srcPort) {
+    protected List<ComponentPortTuple> getReplicatedOutputs(ComposedComponent src, PacketList srcPort) {
         List<ComponentPortTuple> components = new ArrayList<ComponentPortTuple>();
         String sendingName = WiringUtils.getSenderChannelName(src, srcPort);
         for (Transmitter t: src.allOutputReplicationTransmitter) {
@@ -105,6 +106,18 @@ public abstract class AbstractDynamicGraphImport {
                 }
             }
         }
+    }
+
+    protected boolean isComposedWired(Component src, ComposedComponent dst, PacketList dstPort) {
+        boolean isWired = false;
+        for (ComponentPortTuple cpt: getReplicatedInputs(dst, dstPort)) {
+            if (ComposedComponent.isAssignableFrom(cpt.component.class)) {
+                isWired = isWired | isComposedWired(src, cpt.component, cpt.port);
+            } else {
+                isWired = isWired | new ParameterConstraints().isWired(src, cpt.component);
+            }
+        }
+        return isWired;
     }
 
     protected ComponentNode addComponentNode(Object componentContainer, Component c) {

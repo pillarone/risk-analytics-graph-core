@@ -35,7 +35,7 @@ public class ModelGraphExport extends AbstractGraphExport {
             JFieldVar field = fields.get(c);
             block.assign(field, JExpr._new(field.type()));
         }
-        for (ComponentNode n: graph.startComponents) {
+        for (ComponentNode n: graph.resolveStartComponents()) {
             block.directStatement("addStartComponent " + n.getName());
         }
     }

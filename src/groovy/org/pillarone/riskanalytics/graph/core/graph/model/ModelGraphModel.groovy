@@ -12,4 +12,29 @@ class ModelGraphModel extends AbstractGraphModel {
     ModelGraphModel(String name, String packageName) {
         super(name, packageName)
     }
+
+
+    public List<ComponentNode> resolveStartComponents() {
+        if (!startComponents.empty)
+            return startComponents;
+        
+        List<ComponentNode> startComponents = new ArrayList<ComponentNode>();
+        for (ComponentNode c: allComponentNodes) {
+            boolean inConnected, outConnected;
+            for (InPort inport: c.inPorts) {
+                if (allConnections.find {it.to == inport} != null) {
+                    inConnected = true;
+                }
+            }
+            for (OutPort outport: c.outPorts) {
+                if (allConnections.find {it.from == outport} != null) {
+                    outConnected = true;
+                }
+            }
+            if (!inConnected && outConnected) {
+                startComponents.add(c);
+            }
+        }
+        return startComponents;
+    }
 }

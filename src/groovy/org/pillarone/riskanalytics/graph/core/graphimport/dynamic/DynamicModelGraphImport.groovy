@@ -23,7 +23,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         m.init();
         ParameterApplicator pa = new ParameterApplicator(model: m, parameterization: params);
         pa.init();
-        pa.applyParameterForPeriod(0);
+        pa.applyParameterForPeriod(0); 
         m.wire();
         return createFromWired(m);
     }

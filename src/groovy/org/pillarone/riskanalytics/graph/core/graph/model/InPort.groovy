@@ -7,11 +7,11 @@ import org.apache.commons.logging.Log
 class InPort extends Port {
 
     private static Log LOG = LogFactory.getLog(InPort)
-    int connectionCount=0;
+    int connectionCount = 0;
 
     @Override
     protected boolean internalAllowedToConnectTo(Port port) {
-        return doInternalAllowedToConnectTo(port)
+        return doInternalAllowedToConnectTo(port) && checkConnectionCount()
     }
 
     private boolean doInternalAllowedToConnectTo(OutPort outPort) {
@@ -25,6 +25,10 @@ class InPort extends Port {
     private boolean doInternalAllowedToConnectTo(Port port) {
         LOG.warn("Unknown port found: ${port}")
         return false
+    }
+
+    private boolean checkConnectionCount() {
+        return connectionCardinality == null ? true : connectionCount < connectionCardinality.to;
     }
 
 
