@@ -5,6 +5,8 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AssignableTypeFilter
 import org.pillarone.riskanalytics.core.components.Component
 import org.pillarone.riskanalytics.graph.core.palette.annotations.ComponentCategory
+import org.pillarone.riskanalytics.graph.core.palette.Palette
+import org.pillarone.riskanalytics.graph.core.palette.PaletteEntry
 
 
 class PaletteService {
@@ -64,15 +66,21 @@ class PaletteService {
         }
     }
 
-    public void addToCategory(ComponentDefinition definition, String category) {
+    public void addToCategory(String category, ComponentDefinition definition) {
         List<ComponentDefinition> definitions = categoryCache.get(category);
         if (definitions == null) {
-            return;
+            definitions = new ArrayList<ComponentDefinition>();
+            categoryCache.put(category, definitions);
         }
 
         if (!definitions.find {it.typeClass.equals(definition.typeClass)}) {
             definitions.add(definition);
         }
+    }
+
+    public void clearCache(){
+        cache=null;
+        categoryCache.clear();
     }
 
     public List<ComponentDefinition> getDefinitionsFromCategory(String category) {
@@ -88,6 +96,33 @@ class PaletteService {
             }
         }
         return categories;
+    }
+
+    public void storeUserCategory(String name, long uid) {
+        Palette palette;
+        List<ComponentDefinition> definitions;
+        if ((definitions = categoryCache.get(name)) == null)
+            return;
+
+        if ((palette = Palette.findByNameAndUserId(name, uid)) != null) {
+            palette.entries.clear();
+        } else {
+            palette = new Palette(name: name, userId: uid);
+        }
+
+        for (ComponentDefinition cd: definitions) {
+            palette.addToEntries(new PaletteEntry(type: cd.typeClass));
+        }
+        palette.save();
+    }
+
+    public void loadUserCategories(long uid) {
+        List<Palette> palettes = Palette.findAllByUserId(uid);
+        for (Palette p: palettes) {
+            for (PaletteEntry pe: p.entries) {
+                addToCategory(p.name, new ComponentDefinition(typeClass: pe.type));
+            }
+        }
     }
 
 }
