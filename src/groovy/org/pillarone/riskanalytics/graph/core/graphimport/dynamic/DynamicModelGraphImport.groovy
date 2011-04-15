@@ -25,16 +25,17 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         pa.init();
         pa.applyParameterForPeriod(0); 
         m.wire();
-        return createFromWired(m);
+        ModelGraphModel mg= createFromWired(m);
+        return mg;
     }
 
     public ModelGraphModel createFromWired(Model m) {
         graph = new ModelGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
         for (Component c: m.allComponents) {
-            if (!DynamicComposedComponent.isAssignableFrom(c.class))
+            if (!resolveInterior(c))
                 addComponentNode(m, c);
             for (Transmitter t: c.allInputTransmitter) {
-                wireComponents(m, t.sender, t.receiver, t);
+                wireComponents(m,m, t);
             }
         }
         return graph;

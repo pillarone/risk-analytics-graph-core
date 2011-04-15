@@ -23,47 +23,45 @@ public abstract class AbstractDynamicGraphImport {
 
     protected AbstractGraphModel graph;
     protected Map<Component, ComponentNode> components = new HashMap<Component, ComponentNode>();
-    protected List<DynamicComposedComponent> dynamicWiringResolved = new ArrayList<DynamicComposedComponent>();
+    protected List<DynamicComposedComponent> subWiringResolved = new ArrayList<DynamicComposedComponent>();
 
 
-    protected Connection wireComponents(Object componentContainer, Component src, Component dst, Transmitter transmitter) {
-        addComponentNode(componentContainer, src);
-        addComponentNode(componentContainer, dst);
-        wireConcreteComponents(src, dst, transmitter.source, transmitter.target);
-    }
-
-    protected Connection wireComponents(Object componentContainer, DynamicComposedComponent src, Component dst, Transmitter transmitter) {
-        addComponentNode(componentContainer, dst);
-        addDynamicSubComponents(src);
-        for (ComponentPortTuple tuple: getReplicatedOutputs(src, transmitter.source)) {
-            addComponentNode(src, tuple.component);
-            wireConcreteComponents(tuple.component, dst, tuple.port, transmitter.target)
-        }
-    }
-
-    protected Connection wireComponents(Object componentContainer, Component src, DynamicComposedComponent dst, Transmitter transmitter) {
-        addComponentNode(componentContainer, src);
-        addDynamicSubComponents(dst);
-        for (ComponentPortTuple tuple: getReplicatedInputs(dst, transmitter.target)) {
-            addComponentNode(dst, tuple.component);
-            wireConcreteComponents(src, tuple.component, transmitter.source, tuple.port)
-        }
-    }
-
-    protected Connection wireComponents(Object componentContainer, DynamicComposedComponent src, DynamicComposedComponent dst, Transmitter transmitter) {
-        addDynamicSubComponents(src);
-        addDynamicSubComponents(dst);
-        List<ComponentPortTuple> outTuples = getReplicatedOutputs(src, transmitter.source);
-        List<ComponentPortTuple> inTuples = getReplicatedInputs(dst, transmitter.target);
-        for (ComponentPortTuple outTuple: outTuples) {
-            for (ComponentPortTuple inTuple: inTuples) {
-                addComponentNode(src, outTuple.component);
-                addComponentNode(src, inTuple.component);
-                if (ComposedComponent.isAssignableFrom(inTuple.component.class))
-                    isComposedWired(outTuple.component, inTuple.component,inTuple.port);
-                wireConcreteComponents(outTuple.component, inTuple.component, outTuple.port, inTuple.port);
+    protected void wireComponents(Object parentSrc, Object parentDst, Transmitter transmitter) {
+        boolean senderResolved = resolveInterior(transmitter.sender);
+        boolean receiverResolved = resolveInterior(transmitter.receiver);
+        if (senderResolved && receiverResolved) {
+            addSubComponents(transmitter.sender)
+            addSubComponents(transmitter.receiver)
+            List<ComponentPortTuple> outTuples = getReplicatedOutputs(transmitter.sender, transmitter.source);
+            List<ComponentPortTuple> inTuples = getReplicatedInputs(transmitter.receiver, transmitter.target);
+            for (ComponentPortTuple outTuple: outTuples) {
+                for (ComponentPortTuple inTuple: inTuples) {
+                    wireComponents(transmitter.sender, transmitter.receiver, new Transmitter(outTuple.component, outTuple.port, inTuple.component, inTuple.port));
+                }
             }
+
+        } else if (senderResolved && !receiverResolved) {
+            addSubComponents(transmitter.sender)
+            for (ComponentPortTuple tuple: getReplicatedOutputs(transmitter.sender, transmitter.source)) {
+                wireComponents(transmitter.sender, parentDst, new Transmitter(tuple.component, tuple.port, transmitter.receiver, transmitter.target))
+            }
+
+        } else if (!senderResolved && receiverResolved) {
+            addSubComponents(transmitter.receiver)
+            for (ComponentPortTuple tuple: getReplicatedInputs(transmitter.receiver, transmitter.target)) {
+                wireComponents(parentSrc, transmitter.receiver, new Transmitter(transmitter.sender, transmitter.source, tuple.component, tuple.port))
+            }
+        } else {
+            addComponentNode(parentSrc, transmitter.sender);
+            addComponentNode(parentDst, transmitter.receiver);
+            if (ComposedComponent.isAssignableFrom(parentDst.class))
+                new ParameterConstraints().isWired(transmitter.sender,transmitter.receiver);
+            wireConcreteComponents(transmitter.sender, transmitter.receiver, transmitter.source, transmitter.target);
         }
+    }
+
+    protected boolean resolveInterior(Component c) {
+        return ComposedComponent.isAssignableFrom(c.class);
     }
 
     protected List<ComponentPortTuple> getReplicatedInputs(ComposedComponent dst, PacketList dstPort) {
@@ -90,25 +88,25 @@ public abstract class AbstractDynamicGraphImport {
         return components;
     }
 
-    protected void addDynamicSubComponents(DynamicComposedComponent cc) {
-        if (!dynamicWiringResolved.contains(cc)) {
-            dynamicWiringResolved.add(cc);
+    protected void addSubComponents(ComposedComponent cc) {
+        if (!subWiringResolved.contains(cc)) {
+            subWiringResolved.add(cc);
             for (Component c: cc.allSubComponents()) {
                 for (Transmitter t: c.allInputTransmitter) {
                     if (t.sender != cc) {
-                        wireComponents(cc, t.sender, t.receiver, t);
+                        wireComponents(cc, cc, t);
                     }
                 }
                 for (Transmitter t: c.allOutputTransmitter) {
                     if (t.receiver != cc) {
-                        wireComponents(cc, t.sender, t.receiver, t);
+                        wireComponents(cc, cc, t);
                     }
                 }
             }
         }
     }
 
-    protected boolean isComposedWired(Component src, ComposedComponent dst, PacketList dstPort) {
+    /*protected boolean isComposedWired(Component src, ComposedComponent dst, PacketList dstPort) {
         boolean isWired = false;
         for (ComponentPortTuple cpt: getReplicatedInputs(dst, dstPort)) {
             if (ComposedComponent.isAssignableFrom(cpt.component.class)) {
@@ -118,7 +116,7 @@ public abstract class AbstractDynamicGraphImport {
             }
         }
         return isWired;
-    }
+    }*/
 
     protected ComponentNode addComponentNode(Object componentContainer, Component c) {
         ComponentNode componentNode;

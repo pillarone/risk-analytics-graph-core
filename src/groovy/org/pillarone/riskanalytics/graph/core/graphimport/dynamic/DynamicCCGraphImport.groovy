@@ -23,7 +23,7 @@ public class DynamicCCGraphImport extends AbstractDynamicGraphImport {
             for (Transmitter t: c.allInputTransmitter) {
                 if (t.sender == cc)
                     continue;
-                wireComponents(cc, t.sender, t.receiver, t);
+                wireComponents(cc, cc, t);
             }
         }
 
