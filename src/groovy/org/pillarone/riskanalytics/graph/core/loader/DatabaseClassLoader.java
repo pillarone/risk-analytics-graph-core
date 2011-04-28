@@ -12,7 +12,7 @@ public class DatabaseClassLoader extends ClassLoader {
     }
 
     @Override
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
+    protected synchronized Class<?> findClass(String name) throws ClassNotFoundException {
         if (!availableClasses.contains(name)) {
             throw new ClassNotFoundException(name);
         }
@@ -24,6 +24,10 @@ public class DatabaseClassLoader extends ClassLoader {
         byte[] data = GroovyHelper.getClassDefinition(name);
         return defineClass(name, data, 0, data.length);
 
+    }
+
+    public synchronized void refresh() {
+        availableClasses = GroovyHelper.getAllClassNames();
     }
 
 

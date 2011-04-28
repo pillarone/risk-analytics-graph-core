@@ -10,6 +10,7 @@ class ClassRepository {
     }
 
     static constraints = {
+        name(unique: true)
         data(maxSize: 20000)
     }
 }
