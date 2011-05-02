@@ -3,6 +3,7 @@ package org.pillarone.riskanalytics.graph.core.graphimport
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.core.model.Model
 import org.pillarone.riskanalytics.core.components.ComposedComponent
+import org.pillarone.riskanalytics.graph.core.graphimport.dynamic.DynamicModelGraphImport
 
 class GraphImportService {
 
@@ -12,14 +13,18 @@ class GraphImportService {
             Class clazz = gcl.parseClass(content);
 
             if (Model.isAssignableFrom(clazz)) {
-                return new ModelGraphImport().importGraph(clazz,content);
+                return new ModelGraphImport().importGraph(clazz, content);
             }
             if (ComposedComponent.isAssignableFrom(clazz)) {
-                return new ComposedComponentGraphImport().importGraph(clazz,content);
+                return new ComposedComponentGraphImport().importGraph(clazz, content);
             }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    AbstractGraphModel importDynamicModel(String content) {
+        return new DynamicModelGraphImport().importDynamicModel(content);
     }
 }

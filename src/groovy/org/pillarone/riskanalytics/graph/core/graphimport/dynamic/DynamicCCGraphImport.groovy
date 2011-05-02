@@ -35,7 +35,6 @@ public class DynamicCCGraphImport extends AbstractDynamicGraphImport {
                 }
             } else {
                 addComponentNode(cc, t.receiver);
-                new ParameterConstraints().isWired(cc,t.receiver);
                 wireInReplication(cc, t.receiver, t.source, t.target);
             }
         }
@@ -49,7 +48,6 @@ public class DynamicCCGraphImport extends AbstractDynamicGraphImport {
                 }
             } else {
                 addComponentNode(cc, t.sender);
-                new ParameterConstraints().isWired(t.sender,cc);
                 wireOutReplication(t.sender, cc, t.source, t.target);
             }
         }

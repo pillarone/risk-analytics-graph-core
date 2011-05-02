@@ -1,15 +1,14 @@
 package org.pillarone.riskanalytics.graph.core.graphimport.dynamic
 
-import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
-import org.pillarone.riskanalytics.core.model.Model
-import org.pillarone.riskanalytics.core.components.Component
-import org.pillarone.riskanalytics.core.wiring.Transmitter
-import org.pillarone.riskanalytics.core.components.DynamicComposedComponent
-import org.pillarone.riskanalytics.core.util.PropertiesUtils
 import org.apache.commons.lang.StringUtils
-import org.pillarone.riskanalytics.core.simulation.item.Parameterization
-import org.pillarone.riskanalytics.core.parameterization.ParameterizationHelper
+import org.pillarone.riskanalytics.core.components.Component
+import org.pillarone.riskanalytics.core.model.Model
 import org.pillarone.riskanalytics.core.parameterization.ParameterApplicator
+import org.pillarone.riskanalytics.core.parameterization.ParameterizationHelper
+import org.pillarone.riskanalytics.core.simulation.item.Parameterization
+import org.pillarone.riskanalytics.core.util.PropertiesUtils
+import org.pillarone.riskanalytics.core.wiring.Transmitter
+import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 
 public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
 
@@ -23,10 +22,29 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         m.init();
         ParameterApplicator pa = new ParameterApplicator(model: m, parameterization: params);
         pa.init();
-        pa.applyParameterForPeriod(0); 
+        pa.applyParameterForPeriod(0);
         m.wire();
-        ModelGraphModel mg= createFromWired(m);
+        ModelGraphModel mg = createFromWired(m);
         return mg;
+
+        /*Simulation run = new Simulation("Core_${new Date().toString()}")
+        run.parameterization = params
+        run.template = new ResultConfiguration("test")
+        run.modelClass = data.model
+        run.modelVersionNumber = new VersionNumber("1")
+        run.periodCount = 1
+        run.numberOfIterations = 1
+        run.structure = null
+
+        SimulationConfiguration simulationConfiguration = new SimulationConfiguration()
+        simulationConfiguration.simulation = run
+        simulationConfiguration.outputStrategy = new NoOutput()
+
+        SimulationRunner runner = SimulationRunner.createRunner();
+        runner.simulationConfiguration = simulationConfiguration
+        runner.start()
+
+        return null;*/
     }
 
     public ModelGraphModel createFromWired(Model m) {
@@ -35,7 +53,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
             if (!resolveInterior(c))
                 addComponentNode(m, c);
             for (Transmitter t: c.allInputTransmitter) {
-                wireComponents(m,m, t);
+                wireComponents(m, m, t);
             }
         }
         return graph;
@@ -54,7 +72,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
     }
 
     private String getFileContent(String fileContent) {
-        List<String> lines=new StringReader(fileContent).readLines();
+        List<String> lines = new StringReader(fileContent).readLines();
         Properties properties = getProperties(lines)
         properties.propertyNames().each {String old ->
             fileContent = fileContent.replaceAll(old, properties.get(old))

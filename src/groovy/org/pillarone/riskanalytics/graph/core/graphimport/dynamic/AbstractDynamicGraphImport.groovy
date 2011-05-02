@@ -1,23 +1,17 @@
 package org.pillarone.riskanalytics.graph.core.graphimport.dynamic
 
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.core.components.Component
-import org.pillarone.riskanalytics.core.wiring.Transmitter
-import org.pillarone.riskanalytics.core.components.DynamicComposedComponent
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
 import org.pillarone.riskanalytics.core.components.ComposedComponent
-import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
-import org.pillarone.riskanalytics.graph.core.graph.model.InPort
-import org.pillarone.riskanalytics.graph.core.graph.model.OutPort
-import org.pillarone.riskanalytics.graph.core.graph.model.Port
+import org.pillarone.riskanalytics.core.components.DynamicComposedComponent
 import org.pillarone.riskanalytics.core.packets.PacketList
-import org.pillarone.riskanalytics.core.wiring.WiringUtils
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection
-import org.pillarone.riskanalytics.core.parameterization.TableMultiDimensionalParameter
 import org.pillarone.riskanalytics.core.parameterization.ComboBoxTableMultiDimensionalParameter
 import org.pillarone.riskanalytics.core.parameterization.ConstrainedMultiDimensionalParameter
+import org.pillarone.riskanalytics.core.parameterization.IParameterObject
+import org.pillarone.riskanalytics.core.parameterization.TableMultiDimensionalParameter
+import org.pillarone.riskanalytics.core.wiring.Transmitter
+import org.pillarone.riskanalytics.core.wiring.WiringUtils
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
+import org.pillarone.riskanalytics.graph.core.graph.model.*
 
 public abstract class AbstractDynamicGraphImport {
 
@@ -29,6 +23,7 @@ public abstract class AbstractDynamicGraphImport {
     protected void wireComponents(Object parentSrc, Object parentDst, Transmitter transmitter) {
         boolean senderResolved = resolveInterior(transmitter.sender);
         boolean receiverResolved = resolveInterior(transmitter.receiver);
+        boolean connect;
         if (senderResolved && receiverResolved) {
             addSubComponents(transmitter.sender)
             addSubComponents(transmitter.receiver)
@@ -54,14 +49,28 @@ public abstract class AbstractDynamicGraphImport {
         } else {
             addComponentNode(parentSrc, transmitter.sender);
             addComponentNode(parentDst, transmitter.receiver);
-            if (ComposedComponent.isAssignableFrom(parentDst.class))
-                new ParameterConstraints().isWired(transmitter.sender,transmitter.receiver);
-            wireConcreteComponents(transmitter.sender, transmitter.receiver, transmitter.source, transmitter.target);
+
+            if (ComposedComponent.isAssignableFrom(transmitter.receiver.class)) {
+                connect=isComposedWired(transmitter.sender, transmitter.receiver, transmitter.target);
+            } else {
+                connect=new ParameterConstraints().isWired(transmitter.sender, transmitter.receiver);
+            }
+            if (connect)
+                wireConcreteComponents(transmitter.sender, transmitter.receiver, transmitter.source, transmitter.target);
         }
     }
 
     protected boolean resolveInterior(Component c) {
-        return ComposedComponent.isAssignableFrom(c.class);
+        if (DynamicComposedComponent.isAssignableFrom(c.class))
+            return true;
+        if (ComposedComponent.isAssignableFrom(c.class)) {
+            for (Component sub: ((ComposedComponent) c).allSubComponents()) {
+                if (DynamicComposedComponent.isAssignableFrom(sub.class)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     protected List<ComponentPortTuple> getReplicatedInputs(ComposedComponent dst, PacketList dstPort) {
@@ -106,7 +115,7 @@ public abstract class AbstractDynamicGraphImport {
         }
     }
 
-    /*protected boolean isComposedWired(Component src, ComposedComponent dst, PacketList dstPort) {
+    protected boolean isComposedWired(Component src, ComposedComponent dst, PacketList dstPort) {
         boolean isWired = false;
         for (ComponentPortTuple cpt: getReplicatedInputs(dst, dstPort)) {
             if (ComposedComponent.isAssignableFrom(cpt.component.class)) {
@@ -116,7 +125,7 @@ public abstract class AbstractDynamicGraphImport {
             }
         }
         return isWired;
-    }*/
+    }
 
     protected ComponentNode addComponentNode(Object componentContainer, Component c) {
         ComponentNode componentNode;
@@ -194,6 +203,15 @@ class ParameterConstraints {
         getMarkerParameter(dst, inParams);
         getMarkerParameter(src, outParams);
 
+        if (inParams.empty) {
+            String cover = getCoverParameter(dst);
+            if (cover.equals("NONE")){
+                return false;
+            }
+            return true;
+        }
+
+
         boolean wired = true;
         if (inParams.size() > 0) {
             TableMultiDimensionalParameter inParam;
@@ -231,6 +249,16 @@ class ParameterConstraints {
         return wired;
     }
 
+    private String getCoverParameter(Object o) {
+        for (Map.Entry entry: o.properties) {
+            if (entry.value == null) continue;
+            if (IParameterObject.isAssignableFrom(entry.value.class)) {
+                return entry.value.getType().typeName;
+            }
+        }
+        return "";
+    }
+
     private void getMarkerParameter(Object o, List<TableMultiDimensionalParameter> results) {
         if (TableMultiDimensionalParameter.isAssignableFrom(o.class)) {
             results.add(o);
@@ -264,7 +292,7 @@ class ParameterConstraints {
     }
 
     private List getValues(ComboBoxTableMultiDimensionalParameter cmd) {
-        return cmd.getValuesAsObjects()[0];
+        return cmd.getValuesAsObjects();
     }
 
     private List getValues(ConstrainedMultiDimensionalParameter cmd) {
