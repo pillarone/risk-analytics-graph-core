@@ -2,7 +2,7 @@ package org.pillarone.riskanalytics.graph.core.graph.wiringvalidation
 
 import java.lang.reflect.Field
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange
-import org.pillarone.riskanalytics.graph.core.palette.annotations.WiringValidation
+import org.pillarone.riskanalytics.core.wiring.WiringValidation
 
 public class WiringValidationUtil {
 

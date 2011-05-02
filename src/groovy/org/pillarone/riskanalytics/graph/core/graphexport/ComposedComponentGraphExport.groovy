@@ -21,11 +21,11 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange
 import com.sun.codemodel.JAnnotationUse
-import org.pillarone.riskanalytics.graph.core.palette.annotations.WiringValidation
 import com.sun.codemodel.JAnnotationArrayMember
 import org.pillarone.riskanalytics.graph.core.graph.wiringvalidation.WiringValidationUtil
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import org.pillarone.riskanalytics.core.wiring.WiringValidation
 
 public class ComposedComponentGraphExport extends AbstractGraphExport {
 

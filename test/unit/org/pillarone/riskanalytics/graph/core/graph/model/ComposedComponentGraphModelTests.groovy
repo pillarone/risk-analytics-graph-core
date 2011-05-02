@@ -15,7 +15,7 @@ import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.example.component.ExampleInputOutputComponent;
 import org.pillarone.riskanalytics.core.packets.Packet;
 import org.pillarone.riskanalytics.core.packets.PacketList;
-import org.pillarone.riskanalytics.graph.core.palette.annotations.WiringValidation
+import org.pillarone.riskanalytics.core.wiring.WiringValidation
 public class TestCC
     extends ComposedComponent
 {

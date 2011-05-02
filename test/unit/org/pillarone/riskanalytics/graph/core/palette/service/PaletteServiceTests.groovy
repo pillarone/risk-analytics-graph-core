@@ -10,7 +10,7 @@ import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.example.component.ExampleInputOutputComponent;
 import org.pillarone.riskanalytics.core.packets.Packet;
 import org.pillarone.riskanalytics.core.packets.PacketList;
-import org.pillarone.riskanalytics.graph.core.palette.annotations.ComponentCategory;
+import org.pillarone.riskanalytics.core.components.ComponentCategory;
 
 @ComponentCategory(categories=["CAT1","CAT2"])
 public class TestCC

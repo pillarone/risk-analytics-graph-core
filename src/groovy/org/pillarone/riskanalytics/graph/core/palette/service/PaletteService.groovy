@@ -4,9 +4,9 @@ import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
 import org.springframework.core.type.filter.AssignableTypeFilter
 import org.pillarone.riskanalytics.core.components.Component
-import org.pillarone.riskanalytics.graph.core.palette.annotations.ComponentCategory
 import org.pillarone.riskanalytics.graph.core.palette.Palette
 import org.pillarone.riskanalytics.graph.core.palette.PaletteEntry
+import org.pillarone.riskanalytics.core.components.ComponentCategory
 
 
 class PaletteService {
