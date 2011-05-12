@@ -1,6 +1,6 @@
 package org.pillarone.riskanalytics.graph.core.graphimport
 
-import org.pillarone.riskanalytics.core.wiring.IPacketListener
+//import org.pillarone.riskanalytics.core.wiring.IPacketListener
 import org.pillarone.riskanalytics.core.wiring.Transmitter
 import org.pillarone.riskanalytics.core.components.Component
 import org.pillarone.riskanalytics.core.packets.PacketList
@@ -20,7 +20,7 @@ import org.pillarone.riskanalytics.core.model.Model
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.domain.pc.lob.DynamicConfigurableLobsWithReserves
 
-public class TraceImport implements IPacketListener {
+public class TraceImport {
 
     private HashMap<Component, HashMap<ListAsKey, List<ComponentPort>>> connections = new HashMap<Component, HashMap<ListAsKey, List<ComponentPort>>>();
 
