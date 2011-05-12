@@ -18,7 +18,6 @@ import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 import org.pillarone.riskanalytics.graph.core.graph.model.OutPort
 import org.pillarone.riskanalytics.core.model.Model
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
-import org.pillarone.riskanalytics.domain.pc.lob.DynamicConfigurableLobsWithReserves
 
 public class TraceImport {
 
