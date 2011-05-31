@@ -1,23 +1,16 @@
 package org.pillarone.riskanalytics.graph.core.graphimport
 
-//import org.pillarone.riskanalytics.core.wiring.IPacketListener
-import org.pillarone.riskanalytics.core.wiring.Transmitter
-import org.pillarone.riskanalytics.core.components.Component
-import org.pillarone.riskanalytics.core.packets.PacketList
-import org.pillarone.riskanalytics.core.wiring.WiringUtils
-import org.pillarone.riskanalytics.core.components.DynamicComposedComponent
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
-import org.pillarone.riskanalytics.core.components.ComposedComponent
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
-import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
-import org.pillarone.riskanalytics.graph.core.graph.model.Port
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
-import org.pillarone.riskanalytics.graph.core.graph.model.InPort
-import org.pillarone.riskanalytics.graph.core.graph.model.OutPort
+import org.pillarone.riskanalytics.core.components.Component
+import org.pillarone.riskanalytics.core.components.ComposedComponent
+import org.pillarone.riskanalytics.core.components.DynamicComposedComponent
 import org.pillarone.riskanalytics.core.model.Model
-import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
+import org.pillarone.riskanalytics.core.packets.Packet
+import org.pillarone.riskanalytics.core.packets.PacketList
+import org.pillarone.riskanalytics.core.wiring.Transmitter
+import org.pillarone.riskanalytics.core.wiring.WiringUtils
+import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
+import org.pillarone.riskanalytics.graph.core.graph.model.*
 
 public class TraceImport {
 
@@ -26,14 +19,16 @@ public class TraceImport {
     HashMap<Component, ComponentNodeParent> componentCache = new HashMap<Component, ComponentNodeParent>();
 
     void packetSent(Transmitter t) {
+
         List<ComponentPort> dst = fillConnections(t.sender, t.source);
-        Component origin = null;
-        ComponentPort cp = new ComponentPort(component: t.receiver, packetList: t.target, origin: ComposedComponent.isAssignableFrom(t.receiver.class) ? null : origin);
-        if (DynamicConfigurableLobsWithReserves.class.isAssignableFrom(t.sender.class)) {
-            println "";
-        }
-        if (dst.find {it.component == cp.component && it.packetList.is(cp.packetList) && it.origin == cp.origin} == null) {
+        ComponentPort cp = dst.find {it.component == t.receiver && it.packetList.is(t.target)};
+
+        if (cp == null) {
+            cp = new ComponentPort(component: t.receiver, packetList: t.target);
             dst.add(cp);
+        }
+        for (Packet p: t.target) {
+            cp.ids.add(p.id);
         }
     }
 
@@ -46,6 +41,8 @@ public class TraceImport {
         }
         else if (ports.get(new ListAsKey(p)) == null) {
             ports.put(new ListAsKey(p), new ArrayList<ComponentPort>());
+        } else {
+            int x = 0;
         }
         return ports.get(new ListAsKey(p));
     }
@@ -58,15 +55,19 @@ public class TraceImport {
                 for (ListAsKey p: ports.keySet()) {
                     List<ComponentPort> destinations = new ArrayList<ComponentPort>();
                     String s = WiringUtils.getSenderChannelName(c, p.packetList);
-                    getDestinations(c, p.packetList, c, destinations);
+                    getDestinations(c, p.packetList, null, destinations);
+                    if (destinations.size() == 0) {
+                        int x = 0;
+                    }
+
                     s = WiringUtils.getSenderChannelName(destinations[0].component, destinations[0].packetList);
-                    println()
+
                 }
             }
         }
     }
 
-    private void getDestinations(Component sender, PacketList source, Component origin, List<ComponentPort> destinations) {
+    private void getDestinations(Component sender, PacketList source, Set<UUID> ids, List<ComponentPort> destinations) {
         HashMap<ListAsKey, List<ComponentPort>> ports = connections.get(sender);
         List<ComponentPort> dst;
         dst = ports.get(new ListAsKey(source));
@@ -74,13 +75,23 @@ public class TraceImport {
             return;
         }
         for (ComponentPort cp: dst) {
-            if (resolveComponent(cp.component)) {
-                getDestinations(cp.component, cp.packetList, origin, destinations);
-            } else {
-                if (cp.origin == null || cp.origin == origin)
+            if (ids == null || contained(ids, cp.ids)) {
+                if (resolveComponent(cp.component)) {
+                    getDestinations(cp.component, cp.packetList, ids == null ? cp.ids : ids, destinations);
+                } else {
                     destinations.add(cp);
+                }
             }
         }
+    }
+
+    private boolean contained(Set<UUID> a, Set<UUID> b) {
+        for (UUID u: a) {
+            for (UUID u2: b) {
+                if (u.compareTo(u2) == 0) return true;
+            }
+        }
+        return false;
     }
 
 
@@ -93,7 +104,6 @@ public class TraceImport {
         for (Component c: m.allComponents) {
             addComponentToModel(c, mgm)
         }
-        int x = 0;
     }
 
     private ComponentNode createCCNode(ComposedComponent cc) {
@@ -250,13 +260,13 @@ class ListAsKey {
     }
 
     public int hashCode() {
-        return packetList.hashCode();
+        return 0;
     }
 }
 class ComponentPort {
     Component component;
     PacketList packetList;
-    Component origin;
+    Set<UUID> ids = new HashSet<UUID>();
 }
 
 class ComponentNodeParent {
