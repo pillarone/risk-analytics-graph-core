@@ -5,6 +5,7 @@ import org.pillarone.riskanalytics.core.example.packet.TestPacket
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 import org.pillarone.riskanalytics.core.example.component.TestComponent
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
+import org.pillarone.riskanalytics.core.example.component.TestComposedComponent
 
 class ComposedComponentGraphModelTests extends GroovyTestCase {
 
@@ -104,6 +105,13 @@ public class TestCC
         assertTrue node.getPort("outClaims").connectionCardinality.to == 2
         assertTrue node.getPort("inEventSeverities").packetCardinality.to == 2
         assertTrue node.getPort("outClaims").packetCardinality.from == 0
+    }
+
+    void testComposedComponent(){
+        ComposedComponentGraphModel model = new ComposedComponentGraphModel()
+        ComposedComponentNode n=model.createComponentNode(PaletteService.getInstance().getComponentDefinition(TestComposedComponent.class),"name");
+        assertEquals 1,n.getReplicatedInPorts(n.inPorts.first()).size();
+        assertEquals 1,n.getReplicatedOutPorts(n.outPorts.first()).size();
     }
 
 }

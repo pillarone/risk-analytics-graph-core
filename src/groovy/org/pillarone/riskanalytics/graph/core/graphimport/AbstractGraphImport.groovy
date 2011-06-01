@@ -1,20 +1,13 @@
 package org.pillarone.riskanalytics.graph.core.graphimport
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import org.pillarone.riskanalytics.core.components.Component
+import org.pillarone.riskanalytics.core.components.ComposedComponent
 import org.pillarone.riskanalytics.core.wiring.ITransmitter
 import org.pillarone.riskanalytics.core.wiring.WiringUtils
-import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
-import org.pillarone.riskanalytics.graph.core.graph.model.Port
-import java.util.regex.Pattern
-import java.util.regex.Matcher
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection
-import org.pillarone.riskanalytics.core.components.ComposedComponent
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
-import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
-import org.pillarone.riskanalytics.graph.core.graph.model.InPort
-import org.pillarone.riskanalytics.graph.core.graph.model.OutPort
+import org.pillarone.riskanalytics.graph.core.graph.model.*
 
 public abstract class AbstractGraphImport {
 
@@ -27,37 +20,17 @@ public abstract class AbstractGraphImport {
         importListeners.add(importListener);
     }
 
-    protected ComposedComponentNode createComposedComponentNode(ComposedComponent cc, String name) {
-        ComposedComponentNode cn = new ComposedComponentNode(name: name, type: PaletteService.getInstance().getComponentDefinition(cc.class));
-        ComposedComponentGraphModel graph = new ComposedComponentGraphImport().createFromWiredComponent(cc);
+    protected abstract ComposedComponentGraphModel getComposedComponentGraph(ComposedComponent cc)
 
-        //setting ports of componentNode as outerport of composedcomponentgraph
-        cn.inPorts = new ArrayList<InPort>();
-        cn.outPorts = new ArrayList<OutPort>();
-        for (Port p: graph.outerInPorts) {
-            cn.inPorts << p;
-            p.componentNode = cn;
-            p.composedComponentOuterPort = false;
-        }
-        for (Port p: graph.outerOutPorts) {
-            cn.outPorts << p;
-            p.componentNode = cn;
-            p.composedComponentOuterPort = false;
-        }
-        cn.componentGraph = graph;
-        return cn;
-    }
+    ;
 
     protected HashMap<Component, ComponentNode> getComponents(List<Component> subComponents, Object componentContainer, AbstractGraphModel graph) {
         HashMap<Component, ComponentNode> components = new HashMap<Component, ComponentNode>();
         for (Component c: subComponents) {
             String name = componentContainer.properties.find {Map.Entry entry -> entry.value.is(c)}.key;
-            ComponentNode n;
-            if (ComposedComponent.isAssignableFrom(c.class)) {
-                n = createComposedComponentNode(c, name);
-                graph.addComponentNode(n);
-            } else {
-                n = graph.createComponentNode(PaletteService.getInstance().getComponentDefinition(c.class), name);
+            ComponentNode n = graph.createComponentNode(PaletteService.getInstance().getComponentDefinition(c.class), name);
+            if (n instanceof ComposedComponentNode) {
+                n.componentGraph = getComposedComponentGraph(c);
             }
             importListeners.each {it.nodeImported(n)};
             components.put(c, n);

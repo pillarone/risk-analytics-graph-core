@@ -15,19 +15,20 @@ class GraphExportServiceTests extends GroovyTestCase {
     GraphImportService graphImportService;
     GraphExportService graphExportService;
 
-    String ccFile =  """
+    String ccFile = """
 package model;
 import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.example.component.ExampleInputOutputComponent;
 import org.pillarone.riskanalytics.core.packets.Packet;
 import org.pillarone.riskanalytics.core.packets.PacketList;
+import org.pillarone.riskanalytics.core.example.component.TestComposedComponent
 public class TestCC
     extends ComposedComponent
 {
     PacketList<Packet> inEventSeverities = new PacketList(Packet.class);
     PacketList<Packet> outClaims = new PacketList(Packet.class);
 
-    ExampleInputOutputComponent subClaimsGenerator = new ExampleInputOutputComponent();
+    TestComposedComponent subClaimsGenerator = new TestComposedComponent();
     ExampleInputOutputComponent subSeverityExtractor = new ExampleInputOutputComponent();
     /**
      * Component:subSeverityExtractor2
@@ -40,7 +41,7 @@ public class TestCC
          * Replication:subClaimsGenerator.outValue->outClaims
          * empty
          */
-        this.outClaims = subClaimsGenerator.outValue;
+        this.outClaims = subClaimsGenerator.outValue1;
         subSeverityExtractor.inValue = this.inEventSeverities;
         subSeverityExtractor2 .inValue = this.inEventSeverities;
         }
@@ -49,7 +50,7 @@ public class TestCC
          * Connection:subSeverityExtractor.outValue->subClaimsGenerator.inValue
          * empty
          */
-        subClaimsGenerator.inValue = subSeverityExtractor.outValue;
+        subClaimsGenerator.input1 = subSeverityExtractor.outValue;
         }
     }
 }        """

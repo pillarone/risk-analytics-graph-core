@@ -9,6 +9,7 @@ import java.lang.reflect.ParameterizedType
 import org.pillarone.riskanalytics.core.components.Component
 import java.util.Map.Entry
 import org.pillarone.riskanalytics.graph.core.graph.wiringvalidation.WiringValidationUtil
+import org.pillarone.riskanalytics.core.components.ComposedComponent
 
 abstract class AbstractGraphModel {
 
@@ -39,7 +40,12 @@ abstract class AbstractGraphModel {
     }
 
     ComponentNode createComponentNode(ComponentDefinition definition, String name) {
-        ComponentNode newNode = new ComponentNode(type: definition, name: name)
+        ComponentNode newNode;
+        if (ComposedComponent.isAssignableFrom(definition.typeClass)) {
+            newNode = new ComposedComponentNode(type: definition, name: name)
+        } else {
+            newNode = new ComponentNode(type: definition, name: name)
+        }
         newNode.inPorts = Collections.unmodifiableList(obtainInPorts(newNode))
         newNode.outPorts = Collections.unmodifiableList(obtainOutPorts(newNode))
         componentNodes << newNode

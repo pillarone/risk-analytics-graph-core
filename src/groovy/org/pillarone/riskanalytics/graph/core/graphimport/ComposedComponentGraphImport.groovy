@@ -72,4 +72,9 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
             }
         }
     }
+
+    @Override protected ComposedComponentGraphModel getComposedComponentGraph(ComposedComponent cc) {
+        cc.wire();
+        return new ComposedComponentGraphImport().createFromWiredComponent(cc);
+    }
 }
