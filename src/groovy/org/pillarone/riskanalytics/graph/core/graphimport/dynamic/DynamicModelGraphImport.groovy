@@ -9,8 +9,6 @@ import org.pillarone.riskanalytics.core.simulation.item.Parameterization
 import org.pillarone.riskanalytics.core.util.PropertiesUtils
 import org.pillarone.riskanalytics.core.wiring.Transmitter
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
-import org.pillarone.riskanalytics.graph.core.graphimport.TraceImport
-import org.pillarone.riskanalytics.core.wiring.IPacketListener
 import org.pillarone.riskanalytics.core.simulation.item.Simulation
 import org.pillarone.riskanalytics.core.simulation.item.ResultConfiguration
 import org.pillarone.riskanalytics.core.simulation.item.VersionNumber
@@ -40,7 +38,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
 
     }
 
-    public ModelGraphModel importFromTracing(String content) {
+    /*public ModelGraphModel importFromTracing(String content) {
 
         String fileContent = getFileContent(content)
         ConfigObject data = new ConfigSlurper().parse(fileContent);
@@ -68,7 +66,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         runner.start()
         ipl.resolveConnections();
         println(ipl)
-    }
+    }*/
 
     public ModelGraphModel createFromWired(Model m) {
         graph = new ModelGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
