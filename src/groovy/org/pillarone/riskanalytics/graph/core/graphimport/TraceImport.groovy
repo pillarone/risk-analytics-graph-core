@@ -11,12 +11,14 @@ import org.pillarone.riskanalytics.core.wiring.Transmitter
 import org.pillarone.riskanalytics.core.wiring.WiringUtils
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 import org.pillarone.riskanalytics.graph.core.graph.model.*
+import org.pillarone.riskanalytics.core.wiring.IPacketListener
 
-public class TraceImport {
+public class TraceImport implements IPacketListener {
 
     private HashMap<Component, HashMap<ListAsKey, List<ComponentPort>>> connections = new HashMap<Component, HashMap<ListAsKey, List<ComponentPort>>>();
 
     HashMap<Component, ComponentNodeParent> componentCache = new HashMap<Component, ComponentNodeParent>();
+
 
     void packetSent(Transmitter t) {
 
@@ -41,8 +43,6 @@ public class TraceImport {
         }
         else if (ports.get(new ListAsKey(p)) == null) {
             ports.put(new ListAsKey(p), new ArrayList<ComponentPort>());
-        } else {
-            int x = 0;
         }
         return ports.get(new ListAsKey(p));
     }
@@ -56,12 +56,6 @@ public class TraceImport {
                     List<ComponentPort> destinations = new ArrayList<ComponentPort>();
                     String s = WiringUtils.getSenderChannelName(c, p.packetList);
                     getDestinations(c, p.packetList, null, destinations);
-                    if (destinations.size() == 0) {
-                        int x = 0;
-                    }
-
-                    s = WiringUtils.getSenderChannelName(destinations[0].component, destinations[0].packetList);
-
                 }
             }
         }
@@ -79,10 +73,34 @@ public class TraceImport {
                 if (resolveComponent(cp.component)) {
                     getDestinations(cp.component, cp.packetList, ids == null ? cp.ids : ids, destinations);
                 } else {
+                    /*if (ComposedComponent.isAssignableFrom(cp.component.class)) {
+                        if (isComposedWired(cp.component, cp.packetList, ids == null ? cp.ids : ids)) {
+                            destinations.add(cp);
+                        }
+                    } else
+                        destinations.add(cp);*/
+
                     destinations.add(cp);
                 }
+
             }
         }
+    }
+
+    //check if receiving composedcomponent needs to be wired (by checking all inner components)
+
+    private boolean isComposedWired(ComposedComponent receiver, PacketList source, Set<UUID> ids) {
+        List<ComponentPort> dst = new ArrayList<ComponentPort>();
+        boolean ret = false;
+        getDestinations(receiver, source, ids, dst);
+        for (ComponentPort cp: dst) {
+            if (ComposedComponent.isAssignableFrom(cp.component)) {
+                ret = (ret | isComposedWired(cp.component, cp.packetList, ids));
+            } else {
+                return true;
+            }
+        }
+        return ret;
     }
 
     private boolean contained(Set<UUID> a, Set<UUID> b) {
@@ -104,13 +122,30 @@ public class TraceImport {
         for (Component c: m.allComponents) {
             addComponentToModel(c, mgm)
         }
+        setUniqueNames(mgm);
+    }
+
+    private String setUniqueNames(AbstractGraphModel g) {
+
+        HashMap<String, Integer> uniqueNames = new HashMap<String, Integer>();
+        for (ComponentNode c: g.allComponentNodes) {
+            Integer i;
+            if ((i = uniqueNames.get(c.name)) == null) {
+                i = new Integer(0);
+                uniqueNames.put(c.name, i);
+            } else {
+                i = new Integer(i.intValue() + 1);
+                uniqueNames.put(c.name, i);
+                c.name = c.name + "_" + i.intValue();
+            }
+        }
     }
 
     private ComponentNode createCCNode(ComposedComponent cc) {
 
         ComposedComponentNode cn = new ComposedComponentNode(name: cc.name, type: PaletteService.getInstance().getComponentDefinition(cc.class));
         ComposedComponentGraphModel graph = new ComposedComponentGraphModel(cc.getClass().getSimpleName(), cc.getClass().getPackage().name);
-        for (Component c: cc.allSubComponents()) {
+        for (Component c: getSubComponents(cc)) {
             addComponentToModel(c, graph);
         }
         addOuterPorts(graph, cc);
@@ -167,6 +202,56 @@ public class TraceImport {
         return cn;
     }
 
+    /*private Set<Component> getSubComponents(ComposedComponent cc) {
+        Set<Component> cset = new HashSet<Component>();
+        cset.add(cc);
+        for (Transmitter t: cc.allInputReplicationTransmitter) {
+            cset.add(t.receiver);
+        }
+        for (Transmitter t: cc.allOutputReplicationTransmitter) {
+            cset.add(t.sender);
+        }
+
+        for (Transmitter t: cc.allInputReplicationTransmitter) {
+            getSubComponentRec(t.receiver,cset);
+        }
+        for (Transmitter t: cc.allOutputReplicationTransmitter) {
+            getSubComponentRec(t.sender,cset);
+        }
+
+        cset.remove(cc);
+        return cset;
+    }
+
+    private void getSubComponentRec(Component c, Set<Component> cset) {
+        for (Transmitter t: c.allInputTransmitter) {
+            if (!cset.contains(t.sender)) {
+                cset.add(t.sender);
+                getSubComponentRec(t.sender, cset);
+            }
+        }
+        for (Transmitter t: c.allOutputTransmitter) {
+            if (!cset.contains(t.receiver)) {
+                cset.add(t.receiver);
+                getSubComponentRec(t.receiver, cset);
+            }
+        }
+
+    }*/
+
+    private Set<Component> getSubComponents(ComposedComponent cc) {
+        Set<Component> cset = new HashSet<Component>();
+        for (Component c: cc.allSubComponents()) {
+            cset.add(c);
+        }
+        for (prop in cc.properties) {
+            if (prop.value instanceof Component) {
+                cset.add(prop.value);
+            }
+        }
+        return cset;
+    }
+
     private void getReplicatedOutputs(ComposedComponent src, PacketList srcPort, List<ComponentPort> components) {
         String sendingName = WiringUtils.getSenderChannelName(src, srcPort);
         for (Transmitter t: src.allOutputReplicationTransmitter) {
@@ -199,7 +284,7 @@ public class TraceImport {
     private void addComponentToModel(Component c, AbstractGraphModel m) {
 
         if (resolveComponent(c)) {
-            for (Component sub: ((ComposedComponent) c).allSubComponents())
+            for (Component sub: getSubComponents(c))
                 addComponentToModel(sub, m);
         } else {
             ComponentNode cn;

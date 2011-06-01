@@ -51,9 +51,9 @@ public abstract class AbstractDynamicGraphImport {
             addComponentNode(parentDst, transmitter.receiver);
 
             if (ComposedComponent.isAssignableFrom(transmitter.receiver.class)) {
-                connect=isComposedWired(transmitter.sender, transmitter.receiver, transmitter.target);
+                connect = isComposedWired(transmitter.sender, transmitter.receiver, transmitter.target);
             } else {
-                connect=new ParameterConstraints().isWired(transmitter.sender, transmitter.receiver);
+                connect = new ParameterConstraints().isWired(transmitter.sender, transmitter.receiver);
             }
             if (connect)
                 wireConcreteComponents(transmitter.sender, transmitter.receiver, transmitter.source, transmitter.target);
@@ -205,7 +205,7 @@ class ParameterConstraints {
 
         if (inParams.empty) {
             String cover = getCoverParameter(dst);
-            if (cover.equals("NONE")){
+            if (cover.equals("NONE")) {
                 return false;
             }
             return true;
@@ -216,7 +216,7 @@ class ParameterConstraints {
         if (inParams.size() > 0) {
             TableMultiDimensionalParameter inParam;
             for (TableMultiDimensionalParameter tmp: inParams) {
-                if (getMarker(tmp).isAssignableFrom(src.class)) {
+                if (getMarker(tmp)!=null&&getMarker(tmp).isAssignableFrom(src.class)) {
                     inParam = tmp;
                     break;
                 }
@@ -243,7 +243,6 @@ class ParameterConstraints {
                         wired = false;
                     }
                 }
-
             }
         }
         return wired;

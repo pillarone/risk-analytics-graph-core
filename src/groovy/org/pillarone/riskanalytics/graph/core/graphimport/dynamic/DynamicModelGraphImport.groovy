@@ -9,6 +9,15 @@ import org.pillarone.riskanalytics.core.simulation.item.Parameterization
 import org.pillarone.riskanalytics.core.util.PropertiesUtils
 import org.pillarone.riskanalytics.core.wiring.Transmitter
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
+import org.pillarone.riskanalytics.graph.core.graphimport.TraceImport
+import org.pillarone.riskanalytics.core.wiring.IPacketListener
+import org.pillarone.riskanalytics.core.simulation.item.Simulation
+import org.pillarone.riskanalytics.core.simulation.item.ResultConfiguration
+import org.pillarone.riskanalytics.core.simulation.item.VersionNumber
+import org.pillarone.riskanalytics.core.simulation.engine.SimulationConfiguration
+import org.pillarone.riskanalytics.core.simulation.engine.grid.SimulationBlock
+import org.pillarone.riskanalytics.core.output.NoOutput
+import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner
 
 public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
 
@@ -20,6 +29,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         println params;
         Model m = data.model.newInstance();
         m.init();
+        m.injectComponentNames();
         ParameterApplicator pa = new ParameterApplicator(model: m, parameterization: params);
         pa.init();
         pa.applyParameterForPeriod(0);
@@ -27,7 +37,17 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         ModelGraphModel mg = createFromWired(m);
         return mg;
 
-        /*Simulation run = new Simulation("Core_${new Date().toString()}")
+
+    }
+
+    public ModelGraphModel importFromTracing(String content) {
+
+        String fileContent = getFileContent(content)
+        ConfigObject data = new ConfigSlurper().parse(fileContent);
+        spreadRanges(data)
+        Parameterization params = ParameterizationHelper.createParameterizationFromConfigObject(data, "params1");
+        IPacketListener ipl = new TraceImport();
+        Simulation run = new Simulation("Core_${new Date().toString()}")
         run.parameterization = params
         run.template = new ResultConfiguration("test")
         run.modelClass = data.model
@@ -37,14 +57,17 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         run.structure = null
 
         SimulationConfiguration simulationConfiguration = new SimulationConfiguration()
+        simulationConfiguration.addSimulationBlock(new SimulationBlock(0, 1, 0));
         simulationConfiguration.simulation = run
         simulationConfiguration.outputStrategy = new NoOutput()
+        simulationConfiguration.packetListener=ipl;
 
         SimulationRunner runner = SimulationRunner.createRunner();
         runner.simulationConfiguration = simulationConfiguration
-        runner.start()
 
-        return null;*/
+        runner.start()
+        ipl.resolveConnections();
+        println(ipl)
     }
 
     public ModelGraphModel createFromWired(Model m) {
