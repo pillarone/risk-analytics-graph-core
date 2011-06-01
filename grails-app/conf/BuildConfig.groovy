@@ -46,11 +46,11 @@ grails.project.dependency.distribution = {
 coverage {
     exclusions = [
             'models/**',
-            '**/*Test*',
+'**/*Test*',
             '**/com/energizedwork/grails/plugins/jodatime/**',
-            '**/grails/util/**',
-            '**/org/codehaus/**',
-            '**/org/grails/**',
+'**/grails/util/**',
+'**/org/codehaus/**',
+'**/org/grails/**',
             '**GrailsPlugin**',
             '**TagLib**'
     ]
