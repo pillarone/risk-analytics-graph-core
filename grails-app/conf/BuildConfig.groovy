@@ -22,7 +22,8 @@ grails.project.dependency.resolution = {
         test ":code-coverage:1.1.7"
 
         if (appName == "RiskAnalyticsGraphCore") {
-            runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.1-kti"
+            runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.2-kti"
+            runtime "org.pillarone:risk-analytics-property-casualty:1.4-ALPHA-1.2-kti" { transitive = false }
         }
     }
 }
@@ -46,13 +47,16 @@ grails.project.dependency.distribution = {
 coverage {
     exclusions = [
             'models/**',
-'**/*Test*',
+            '**/*Test*',
             '**/com/energizedwork/grails/plugins/jodatime/**',
-'**/grails/util/**',
-'**/org/codehaus/**',
-'**/org/grails/**',
+            '**/grails/util/**',
+            '**/org/codehaus/**',
+            '**/org/grails/**',
             '**GrailsPlugin**',
             '**TagLib**'
     ]
 
 }
+
+// grails.plugin.location.'risk-analytics-core' = "../RiskAnalyticsCore"
+//grails.plugin.location.'risk-analytics-pc' = "../RiskAnalyticsPC"
