@@ -140,6 +140,15 @@ class GraphPersistenceService {
         return load(model)
     }
 
+    AbstractGraphModel load(String name, String packageName) {
+        GraphModel model = GraphModel.findByNameAndPackageName(name, packageName)
+        if (model == null) {
+            throw new GraphPersistenceException("No model found with name $name in package $packageName")
+        }
+
+        return load(model)
+    }
+
     List<AbstractGraphModel> loadAll() {
         return GraphModel.list().collect { load(it) }
     }
