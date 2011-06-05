@@ -2,12 +2,11 @@ package org.pillarone.riskanalytics.graph.core.graph.model
 
 import org.pillarone.riskanalytics.graph.core.graph.util.IntegerRange
 
-abstract class Port {
+abstract class Port extends GraphElement {
 
     public static final String IN_PORT_PREFIX = "in"
     public static final String OUT_PORT_PREFIX = "out"
 
-    String name
     Class packetType
     ComponentNode componentNode
     boolean composedComponentOuterPort = false
