@@ -47,7 +47,7 @@ abstract class AbstractGraphModel extends GraphElement {
 
     ComponentNode createComponentNode(ComponentDefinition definition, String name) {
         ComponentNode newNode
-        if (ComposedComponent.isAssignableFrom(definition.getTypeClass())) {
+        if (ComposedComponent.isAssignableFrom(definition.typeClass)) {
             newNode = new ComposedComponentNode(type: definition, name: name)
         } else {
             newNode = new ComponentNode(type: definition, name: name)

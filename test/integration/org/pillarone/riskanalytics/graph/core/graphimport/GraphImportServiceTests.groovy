@@ -18,21 +18,22 @@ import org.pillarone.riskanalytics.core.components.ComposedComponent;
 import org.pillarone.riskanalytics.core.packets.PacketList;
 import org.pillarone.riskanalytics.core.packets.Packet;
 import org.pillarone.riskanalytics.core.example.component.ExampleInputOutputComponent
+import org.pillarone.riskanalytics.core.example.component.TestComposedComponent
 
 public class TestCC
     extends ComposedComponent
 {
     PacketList<Packet> inEventSeverities = new PacketList(Packet.class);
     PacketList<Packet> outClaims = new PacketList(Packet.class);
-    ExampleInputOutputComponent subSeverityExtractor = new ExampleInputOutputComponent();
+    TestComposedComponent subSeverityExtractor = new TestComposedComponent();
     ExampleInputOutputComponent subClaimsGenerator = new ExampleInputOutputComponent();
     public void wire() {
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.PortReplicatorCategory) {
         this.outClaims = subClaimsGenerator.outValue;
-        subSeverityExtractor.inValue = this.inEventSeverities;
+        subSeverityExtractor.input1 = this.inEventSeverities;
         }
         org.pillarone.riskanalytics.core.wiring.WiringUtils.use(org.pillarone.riskanalytics.core.wiring.WireCategory) {
-        subClaimsGenerator.inValue = subSeverityExtractor.outValue;
+        subClaimsGenerator.inValue = subSeverityExtractor.outValue1;
         }
     }
 }

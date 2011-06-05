@@ -5,6 +5,8 @@ import org.pillarone.riskanalytics.core.model.Model
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
+import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
+import org.pillarone.riskanalytics.core.components.ComposedComponent
 
 public class ModelGraphImport extends AbstractGraphImport {
 
@@ -35,5 +37,9 @@ public class ModelGraphImport extends AbstractGraphImport {
             ComponentNode n = components.get(c);
             graph.startComponents.add(n);
         }
+    }
+
+    @Override protected ComposedComponentGraphModel getComposedComponentGraph(ComposedComponent cc) {
+        return new ComposedComponentGraphImport().createFromWiredComponent(cc);
     }
 }
