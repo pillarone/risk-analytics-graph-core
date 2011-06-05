@@ -9,18 +9,25 @@ import java.lang.reflect.ParameterizedType
 import org.pillarone.riskanalytics.core.components.Component
 import java.util.Map.Entry
 import org.pillarone.riskanalytics.graph.core.graph.wiringvalidation.WiringValidationUtil
+import org.pillarone.riskanalytics.core.components.ComposedComponent
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
 
-abstract class AbstractGraphModel {
+abstract class AbstractGraphModel extends GraphElement {
 
     Long id
-
-    String name
     String packageName
 
     protected List<ComponentNode> componentNodes = []
     protected List<Connection> connections = []
 
+    protected List<ComponentNode> selectedNodes = []
+    protected List<Connection> selectedConnections = []
+
     private List<IGraphModelChangeListener> graphModelChangeListeners = []
+
+    protected List<IComponentNodeFilter> nodeFilters = []
+    protected List<ComponentNode> filteredNodesList = []
+    protected List<Connection> filteredConnectionsList = []
 
     AbstractGraphModel() {
     }
@@ -39,7 +46,12 @@ abstract class AbstractGraphModel {
     }
 
     ComponentNode createComponentNode(ComponentDefinition definition, String name) {
-        ComponentNode newNode = new ComponentNode(type: definition, name: name)
+        ComponentNode newNode
+        if (ComposedComponent.isAssignableFrom(definition.getTypeClass())) {
+            newNode = new ComposedComponentNode(type: definition, name: name)
+        } else {
+            newNode = new ComponentNode(type: definition, name: name)
+        }
         newNode.inPorts = Collections.unmodifiableList(obtainInPorts(newNode))
         newNode.outPorts = Collections.unmodifiableList(obtainOutPorts(newNode))
         componentNodes << newNode
@@ -57,9 +69,43 @@ abstract class AbstractGraphModel {
         graphModelChangeListeners*.nodeAdded(componentNode)
     }
 
+    List<ComponentNode> getSelectedNodes() {
+        return selectedNodes;
+    }
+
+    void setSelectedNodes(List<ComponentNode> nodes, Object originator) {
+        selectedNodes = nodes
+        graphModelChangeListeners.each {
+            if (it!=originator) {
+                it.nodesSelected(selectedNodes)
+            }
+        }
+    }
+
+    List<Connection> getSelectedConnections() {
+        return selectedConnections;
+    }
+    
+    void setSelectedConnections(List<Connection> connections, Object originator) {
+        selectedConnections = connections
+        graphModelChangeListeners.each {
+            if (it!=originator) {
+                it.connectionsSelected(selectedConnections)
+            }
+        }
+    }
+
+    void clearSelections() {
+        selectedNodes = []
+        selectedConnections = []
+        graphModelChangeListeners*.selectionCleared()
+    }
+
     void removeComponentNode(ComponentNode toRemove) {
         componentNodes.remove(toRemove)
-
+        if (selectedNodes.contains(toRemove)) {
+            selectedNodes.remove(toRemove)
+        }
         graphModelChangeListeners*.nodeRemoved(toRemove)
 
         Iterator<Connection> iterator = connections.iterator()
@@ -101,7 +147,18 @@ abstract class AbstractGraphModel {
                 ((InPort) (connection.to)).connectionCount--;
         }
 
+        if (selectedConnections.contains(connection)) {
+            selectedConnections.remove(connection)
+        }
+        
         graphModelChangeListeners*.connectionRemoved(connection)
+    }
+
+    void changeNodeProperty(ComponentNode node, String propertyName, Object oldValue, Object newValue) {
+        if (oldValue != newValue && node.properties.containsKey(propertyName)) {
+            node."$propertyName" = newValue
+            graphModelChangeListeners*.nodePropertyChanged(node, propertyName, oldValue, newValue)
+        }
     }
 
     List<Port> getAvailablePorts(Port portToConnect) {
@@ -151,7 +208,6 @@ abstract class AbstractGraphModel {
 
     protected Map<Field, Class> obtainPorts(ComponentDefinition definition, String prefix) {
         Map<String, Class> result = [:]
-
         Class currentClass = definition.typeClass
         while (currentClass != Component.class) {
             for (Field field in currentClass.declaredFields) {
@@ -166,7 +222,125 @@ abstract class AbstractGraphModel {
             }
             currentClass = currentClass.superclass
         }
-
         return result
     }
+
+    List<Connection> getEmergingConnections(List<ComponentNode> nodes) {
+        List<Connection> emergingConnections = new ArrayList<Connection>()
+        for (ComponentNode node : nodes) {
+            for (Connection c : getEmergingConnections(node)) {
+                if (!emergingConnections.contains(c)) {
+                    emergingConnections.add(c)
+                }
+            }
+        }
+        return emergingConnections;
+    }
+
+    List<Connection> getEmergingConnections(ComponentNode node) {
+        List<Connection> emergingConnections = new ArrayList<Connection>()
+        for (Connection c : connections) {
+            if (c.getFrom().getComponentNode()==node || c.getTo().getComponentNode()==node) {
+                emergingConnections.add(c)
+            }
+        }
+        return emergingConnections
+    }
+
+    List<ComponentNode> getAttachedNodes(List<Connection> connections) {
+        List<ComponentNode> connectedNodes = new ArrayList<ComponentNode>()
+        for (Connection c : connections) {
+            ComponentNode node = c.getFrom().getComponentNode()
+            if (!connectedNodes.contains(node)) {
+                connectedNodes.add(node)
+            }
+            node = c.getTo().getComponentNode()
+            if (!connectedNodes.contains(node)) {
+                connectedNodes.add(node)
+            }
+        }
+        return connectedNodes
+    }
+
+    List<ComponentNode> getConnectedNodes(List<ComponentNode> nodes) {
+        List<ComponentNode> connectedNodes = new ArrayList<ComponentNode>(nodes)
+        for (ComponentNode node : getAttachedNodes(getEmergingConnections(nodes))) {
+            if (!connectedNodes.contains(node)) {
+                connectedNodes.add(node)
+            }
+        }
+        return connectedNodes
+    }
+
+    void addNodeFilter(IComponentNodeFilter filter) {
+        if (!nodeFilters.contains(filter)) {
+            nodeFilters << filter
+        }
+        filteredNodesList = null
+        filteredConnectionsList = null
+        graphModelChangeListeners*.filtersApplied()
+    }
+
+    void clearNodeFilters() {
+        nodeFilters = []
+        filteredNodesList = null
+        filteredConnectionsList = null
+        graphModelChangeListeners*.filtersApplied()
+    }
+
+    List<ComponentNode> getFilteredComponentsList() {
+        if (filteredNodesList) return filteredNodesList
+        List<ComponentNode> filteredList = componentNodes
+        for (IComponentNodeFilter filter : nodeFilters) {
+            filteredList = filter.filterNodesList(filteredList)
+        }
+        return filteredList
+    }
+
+    List<Connection> getFilteredConnectionsList() {
+        if (filteredConnectionsList) return filteredConnectionsList
+        List<Connection> filteredList = connections
+        for (IComponentNodeFilter filter : nodeFilters) {
+            filteredList = filter.filterConnectionsList(filteredList)
+        }
+        return filteredList
+    }
+
+    /**
+     * Find a component node with given name in graph model. Return null if not found.
+     *
+     * @param model model to search the component node in.
+     * @param name  name to search for.
+     * @return
+     */
+    ComponentNode findNodeByName(String name) {
+        for (ComponentNode node : componentNodes()) {
+            if (node.getName().equals(name)) {
+                return node
+            }
+        }
+        return null
+    }
+
+    /**
+     * Check whether there are connections to or from the given component node in the given model.
+     *
+     * @param node
+     * @param model
+     * @return
+     */
+    boolean isConnected(ComponentNode node) {
+        for (Port p : node.getInPorts()) {
+            for (Connection c : connections) {
+                if (c.getTo() == p) return true
+            }
+        }
+        for (Port p : node.getOutPorts()) {
+            for (Connection c : connections) {
+                if (c.getFrom() == p) return true;
+            }
+        }
+        return false;
+    }
+
 }
