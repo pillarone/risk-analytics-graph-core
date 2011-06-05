@@ -6,6 +6,7 @@ class ComposedComponentGraphModel extends AbstractGraphModel {
     private List<OutPort> outerOutPorts = []
 
     ComposedComponentGraphModel() {
+        super()
     }
 
     ComposedComponentGraphModel(String name, String packageName) {
