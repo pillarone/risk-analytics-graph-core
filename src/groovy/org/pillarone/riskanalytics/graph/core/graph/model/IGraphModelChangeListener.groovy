@@ -11,4 +11,13 @@ interface IGraphModelChangeListener {
 
     void nodeRemoved(ComponentNode node)
 
+    void nodesSelected(List<ComponentNode> nodes)
+
+    void connectionsSelected(List<Connection> connections)
+
+    void selectionCleared()
+
+    void filtersApplied()
+
+    void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue)
 }
