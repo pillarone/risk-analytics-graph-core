@@ -1,6 +1,6 @@
 class RiskAnalyticsGraphCoreGrailsPlugin {
     // the plugin version
-    def version = "0.3.1"
+    def version = "0.3.2"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "1.3.4 > *"
     // the other plugins this plugin depends on
