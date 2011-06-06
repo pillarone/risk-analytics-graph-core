@@ -19,11 +19,11 @@ grails.project.dependency.resolution = {
         runtime ":spring-security-core:1.1.2"
         runtime ":tomcat:1.3.7"
 
-        test ":code-coverage:1.1.7"
+        test ":code-coverage:1.2.2"
 
         if (appName == "RiskAnalyticsGraphCore") {
             runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.2-kti"
-            runtime "org.pillarone:risk-analytics-property-casualty:1.4-ALPHA-1.2-kti" { transitive = false }
+            runtime ("org.pillarone:risk-analytics-property-casualty:1.4-ALPHA-1.2-kti") { transitive = false }
         }
     }
 }
