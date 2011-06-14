@@ -11,6 +11,7 @@ import java.util.Map.Entry
 import org.pillarone.riskanalytics.graph.core.graph.wiringvalidation.WiringValidationUtil
 import org.pillarone.riskanalytics.core.components.ComposedComponent
 import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
+import org.pillarone.riskanalytics.core.components.MultiPhaseComponent
 
 abstract class AbstractGraphModel extends GraphElement {
 
@@ -76,7 +77,7 @@ abstract class AbstractGraphModel extends GraphElement {
     void setSelectedNodes(List<ComponentNode> nodes, Object originator) {
         selectedNodes = nodes
         graphModelChangeListeners.each {
-            if (it!=originator) {
+            if (it != originator) {
                 it.nodesSelected(selectedNodes)
             }
         }
@@ -85,11 +86,11 @@ abstract class AbstractGraphModel extends GraphElement {
     List<Connection> getSelectedConnections() {
         return selectedConnections;
     }
-    
+
     void setSelectedConnections(List<Connection> connections, Object originator) {
         selectedConnections = connections
         graphModelChangeListeners.each {
-            if (it!=originator) {
+            if (it != originator) {
                 it.connectionsSelected(selectedConnections)
             }
         }
@@ -150,7 +151,7 @@ abstract class AbstractGraphModel extends GraphElement {
         if (selectedConnections.contains(connection)) {
             selectedConnections.remove(connection)
         }
-        
+
         graphModelChangeListeners*.connectionRemoved(connection)
     }
 
@@ -227,8 +228,8 @@ abstract class AbstractGraphModel extends GraphElement {
 
     List<Connection> getEmergingConnections(List<ComponentNode> nodes) {
         List<Connection> emergingConnections = new ArrayList<Connection>()
-        for (ComponentNode node : nodes) {
-            for (Connection c : getEmergingConnections(node)) {
+        for (ComponentNode node: nodes) {
+            for (Connection c: getEmergingConnections(node)) {
                 if (!emergingConnections.contains(c)) {
                     emergingConnections.add(c)
                 }
@@ -239,8 +240,8 @@ abstract class AbstractGraphModel extends GraphElement {
 
     List<Connection> getEmergingConnections(ComponentNode node) {
         List<Connection> emergingConnections = new ArrayList<Connection>()
-        for (Connection c : connections) {
-            if (c.getFrom().getComponentNode()==node || c.getTo().getComponentNode()==node) {
+        for (Connection c: connections) {
+            if (c.getFrom().getComponentNode() == node || c.getTo().getComponentNode() == node) {
                 emergingConnections.add(c)
             }
         }
@@ -249,7 +250,7 @@ abstract class AbstractGraphModel extends GraphElement {
 
     List<ComponentNode> getAttachedNodes(List<Connection> connections) {
         List<ComponentNode> connectedNodes = new ArrayList<ComponentNode>()
-        for (Connection c : connections) {
+        for (Connection c: connections) {
             ComponentNode node = c.getFrom().getComponentNode()
             if (!connectedNodes.contains(node)) {
                 connectedNodes.add(node)
@@ -264,7 +265,7 @@ abstract class AbstractGraphModel extends GraphElement {
 
     List<ComponentNode> getConnectedNodes(List<ComponentNode> nodes) {
         List<ComponentNode> connectedNodes = new ArrayList<ComponentNode>(nodes)
-        for (ComponentNode node : getAttachedNodes(getEmergingConnections(nodes))) {
+        for (ComponentNode node: getAttachedNodes(getEmergingConnections(nodes))) {
             if (!connectedNodes.contains(node)) {
                 connectedNodes.add(node)
             }
@@ -291,7 +292,7 @@ abstract class AbstractGraphModel extends GraphElement {
     List<ComponentNode> getFilteredComponentsList() {
         if (filteredNodesList) return filteredNodesList
         List<ComponentNode> filteredList = componentNodes
-        for (IComponentNodeFilter filter : nodeFilters) {
+        for (IComponentNodeFilter filter: nodeFilters) {
             filteredList = filter.filterNodesList(filteredList)
         }
         return filteredList
@@ -300,7 +301,7 @@ abstract class AbstractGraphModel extends GraphElement {
     List<Connection> getFilteredConnectionsList() {
         if (filteredConnectionsList) return filteredConnectionsList
         List<Connection> filteredList = connections
-        for (IComponentNodeFilter filter : nodeFilters) {
+        for (IComponentNodeFilter filter: nodeFilters) {
             filteredList = filter.filterConnectionsList(filteredList)
         }
         return filteredList
@@ -310,11 +311,11 @@ abstract class AbstractGraphModel extends GraphElement {
      * Find a component node with given name in graph model. Return null if not found.
      *
      * @param model model to search the component node in.
-     * @param name  name to search for.
+     * @param name name to search for.
      * @return
      */
     ComponentNode findNodeByName(String name) {
-        for (ComponentNode node : componentNodes()) {
+        for (ComponentNode node: componentNodes()) {
             if (node.getName().equals(name)) {
                 return node
             }
@@ -330,17 +331,41 @@ abstract class AbstractGraphModel extends GraphElement {
      * @return
      */
     boolean isConnected(ComponentNode node) {
-        for (Port p : node.getInPorts()) {
-            for (Connection c : connections) {
+        for (Port p: node.getInPorts()) {
+            for (Connection c: connections) {
                 if (c.getTo() == p) return true
             }
         }
-        for (Port p : node.getOutPorts()) {
-            for (Connection c : connections) {
+        for (Port p: node.getOutPorts()) {
+            for (Connection c: connections) {
                 if (c.getFrom() == p) return true;
             }
         }
         return false;
+    }
+
+    public boolean hasLoop(ComponentNode src, ComponentNode dst) {
+        return findLoop(src, dst);
+    }
+
+    private boolean findLoop(ComponentNode n, ComponentNode visited) {
+        if (n == null || visited == null)
+            return false;
+        boolean hasLoop = false;
+        for (InPort inPort: n.inPorts) {
+            Collection<Connection> connected = connections.findAll {it.to == inPort}
+            if (connected != null) {
+                for (Connection c: connected) {
+                    if (c.from.componentNode == visited) {
+                        return !(MultiPhaseComponent.isAssignableFrom(c.from.componentNode.type.typeClass));
+                    }
+                    else {
+                        hasLoop = hasLoop | findLoop(c.from.componentNode, visited);
+                    }
+                }
+            }
+        }
+        return hasLoop
     }
 
 }

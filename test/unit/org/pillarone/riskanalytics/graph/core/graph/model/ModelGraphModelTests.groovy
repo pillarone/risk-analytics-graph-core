@@ -20,7 +20,7 @@ class ModelGraphModelTests extends GroovyTestCase {
         ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name")
         ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name2")
 
-        Connection connection = model.createConnection(node2.getPort("outClaims"),node.getPort("input3"))
+        Connection connection = model.createConnection(node2.getPort("outClaims"), node.getPort("input3"))
 
         assertTrue model.allConnections.contains(connection)
 
@@ -31,7 +31,7 @@ class ModelGraphModelTests extends GroovyTestCase {
         ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name")
         ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name2")
 
-        Connection connection = model.createConnection(node2.getPort("outClaims"),node.getPort("input3"))
+        Connection connection = model.createConnection(node2.getPort("outClaims"), node.getPort("input3"))
 
         assertTrue model.allConnections.contains(connection)
 
@@ -45,7 +45,7 @@ class ModelGraphModelTests extends GroovyTestCase {
         ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name")
         ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name2")
 
-        Connection connection = model.createConnection(node2.getPort("outClaims"),node.getPort("input3"))
+        Connection connection = model.createConnection(node2.getPort("outClaims"), node.getPort("input3"))
 
         assertTrue model.allConnections.contains(connection)
 
@@ -76,12 +76,12 @@ class ModelGraphModelTests extends GroovyTestCase {
         ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node2")
         ComponentNode node3 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node3")
 
-        Connection conn1 = model.createConnection(node2.getPort("outClaims"),node1.getPort("input3"))
-        Connection conn2 = model.createConnection(node2.getPort("outValue1"),node1.getPort("input1"))
+        Connection conn1 = model.createConnection(node2.getPort("outClaims"), node1.getPort("input3"))
+        Connection conn2 = model.createConnection(node2.getPort("outValue1"), node1.getPort("input1"))
         Connection conn3 = model.createConnection(node3.getPort("outValue2"), node2.getPort("input2"))
         Connection conn4 = model.createConnection(node3.getPort("outValue2"), node1.getPort("input2"))
 
-     
+
         List<Connection> ec = model.getEmergingConnections(node2)
         assertEquals 3, ec.size()
         assertTrue ec.contains(conn1)
@@ -89,7 +89,7 @@ class ModelGraphModelTests extends GroovyTestCase {
         assertTrue ec.contains(conn3)
         assertFalse ec.contains(conn4)
 
-        ec = model.getEmergingConnections([node1,node2])
+        ec = model.getEmergingConnections([node1, node2])
         assertEquals 4, ec.size()
         assertTrue ec.contains(conn1)
         assertTrue ec.contains(conn2)
@@ -104,7 +104,7 @@ class ModelGraphModelTests extends GroovyTestCase {
         ComponentNode node3 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node3")
         ComponentNode node4 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node4")
 
-        Connection conn1 = model.createConnection(node2.getPort("outClaims"),node1.getPort("input3"))
+        Connection conn1 = model.createConnection(node2.getPort("outClaims"), node1.getPort("input3"))
         Connection conn2 = model.createConnection(node3.getPort("outValue2"), node2.getPort("input2"))
 
         List<ComponentNode> nodes = model.getAttachedNodes([conn1, conn2])
@@ -122,7 +122,7 @@ class ModelGraphModelTests extends GroovyTestCase {
         ComponentNode node3 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node3")
         ComponentNode node4 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node4")
 
-        Connection conn1 = model.createConnection(node2.getPort("outClaims"),node1.getPort("input3"))
+        Connection conn1 = model.createConnection(node2.getPort("outClaims"), node1.getPort("input3"))
         Connection conn2 = model.createConnection(node3.getPort("outValue2"), node2.getPort("input2"))
 
         List<ComponentNode> nodes = model.getConnectedNodes([node1])
@@ -138,5 +138,19 @@ class ModelGraphModelTests extends GroovyTestCase {
         assertTrue nodes.contains(node2)
         assertTrue nodes.contains(node3)
         assertFalse nodes.contains(node4)
+    }
+
+    void testLoopNodes() {
+        ModelGraphModel model = new ModelGraphModel()
+        ComponentNode node1 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node1")
+        ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node2")
+        ComponentNode node3 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "node3")
+
+        Connection conn1 = model.createConnection(node1.getPort("outClaims"), node2.getPort("input3"))
+        Connection conn2 = model.createConnection(node2.getPort("outValue2"), node3.getPort("input1"))
+
+        assertTrue model.hasLoop(node3, node1)
+
+
     }
 }
