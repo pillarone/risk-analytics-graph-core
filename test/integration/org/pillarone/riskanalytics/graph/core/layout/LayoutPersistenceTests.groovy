@@ -20,12 +20,11 @@ class LayoutPersistenceTests extends GroovyTestCase {
         }
         GraphLayoutService.getInstance().saveLayout(0, model.packageName + "." + model.name, componentLayouts)
 
-        i = 0
         componentLayouts = GraphLayoutService.getInstance().loadLayout(0, model.packageName + "." + model.name);
-        for (ComponentLayout c: componentLayouts) {
-            assertEquals i, c.x
-            assertEquals i, c.y
-            i++
+        assertEquals model.allComponentNodes.size(), componentLayouts.size()
+        for (i=0;i<componentLayouts.size();i++) {
+            assertNotNull componentLayouts.find{it.x==i}
+            assertNotNull componentLayouts.find{it.y==i}
         }
     }
 }
