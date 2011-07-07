@@ -315,7 +315,7 @@ abstract class AbstractGraphModel extends GraphElement {
      * @return
      */
     ComponentNode findNodeByName(String name) {
-        for (ComponentNode node: componentNodes()) {
+        for (ComponentNode node: componentNodes) {
             if (node.getName().equals(name)) {
                 return node
             }
