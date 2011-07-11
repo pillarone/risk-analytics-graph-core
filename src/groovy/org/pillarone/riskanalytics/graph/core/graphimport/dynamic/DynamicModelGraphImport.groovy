@@ -3,22 +3,26 @@ package org.pillarone.riskanalytics.graph.core.graphimport.dynamic
 import org.apache.commons.lang.StringUtils
 import org.pillarone.riskanalytics.core.components.Component
 import org.pillarone.riskanalytics.core.model.Model
+import org.pillarone.riskanalytics.core.output.NoOutput
 import org.pillarone.riskanalytics.core.parameterization.ParameterApplicator
 import org.pillarone.riskanalytics.core.parameterization.ParameterizationHelper
-import org.pillarone.riskanalytics.core.simulation.item.Parameterization
-import org.pillarone.riskanalytics.core.util.PropertiesUtils
-import org.pillarone.riskanalytics.core.wiring.Transmitter
-import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
-import org.pillarone.riskanalytics.core.simulation.item.Simulation
-import org.pillarone.riskanalytics.core.simulation.item.ResultConfiguration
-import org.pillarone.riskanalytics.core.simulation.item.VersionNumber
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationConfiguration
-import org.pillarone.riskanalytics.core.simulation.engine.grid.SimulationBlock
-import org.pillarone.riskanalytics.core.output.NoOutput
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner
+import org.pillarone.riskanalytics.core.simulation.engine.grid.SimulationBlock
+import org.pillarone.riskanalytics.core.simulation.item.Parameterization
+import org.pillarone.riskanalytics.core.simulation.item.ResultConfiguration
+import org.pillarone.riskanalytics.core.simulation.item.Simulation
+import org.pillarone.riskanalytics.core.simulation.item.VersionNumber
+import org.pillarone.riskanalytics.core.util.PropertiesUtils
+import org.pillarone.riskanalytics.core.wiring.IPacketListener
+import org.pillarone.riskanalytics.core.wiring.Transmitter
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection
+import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
+import org.pillarone.riskanalytics.graph.core.graphimport.TraceImport
 
 public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
 
+    @Deprecated
     public ModelGraphModel importDynamicModel(String content) {
         String fileContent = getFileContent(content)
         ConfigObject data = new ConfigSlurper().parse(fileContent);
@@ -34,11 +38,9 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         m.wire();
         ModelGraphModel mg = createFromWired(m);
         return mg;
-
-
     }
 
-    /*public ModelGraphModel importFromTracing(String content) {
+    public ModelGraphModel importFromTracing(String content) {
 
         String fileContent = getFileContent(content)
         ConfigObject data = new ConfigSlurper().parse(fileContent);
@@ -46,6 +48,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         Parameterization params = ParameterizationHelper.createParameterizationFromConfigObject(data, "params1");
         IPacketListener ipl = new TraceImport();
         Simulation run = new Simulation("Core_${new Date().toString()}")
+
         run.parameterization = params
         run.template = new ResultConfiguration("test")
         run.modelClass = data.model
@@ -54,19 +57,20 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         run.numberOfIterations = 1
         run.structure = null
 
-        SimulationConfiguration simulationConfiguration = new SimulationConfiguration()
-        simulationConfiguration.addSimulationBlock(new SimulationBlock(0, 1, 0));
-        simulationConfiguration.simulation = run
-        simulationConfiguration.outputStrategy = new NoOutput()
-        simulationConfiguration.packetListener=ipl;
+        SimulationConfiguration simulationConfiguration = new SimulationConfiguration(
+                simulation: run, outputStrategy: new NoOutput(),
+                simulationBlocks: [new SimulationBlock(0, run.numberOfIterations, 0)]
+        )
+        simulationConfiguration.packetListener = ipl;
 
         SimulationRunner runner = SimulationRunner.createRunner();
         runner.simulationConfiguration = simulationConfiguration
 
         runner.start()
         ipl.resolveConnections();
-        println(ipl)
-    }*/
+
+        return ipl.mgm;
+    }
 
     public ModelGraphModel createFromWired(Model m) {
         graph = new ModelGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);

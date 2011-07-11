@@ -25,6 +25,6 @@ class GraphImportService {
     }
 
     AbstractGraphModel importDynamicModel(String content) {
-        return new DynamicModelGraphImport().importDynamicModel(content);
+        return new DynamicModelGraphImport().importFromTracing(content);
     }
 }

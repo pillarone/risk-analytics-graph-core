@@ -70,6 +70,7 @@ public class TestCC
         GroovyClassLoader gcl=new GroovyClassLoader();
         Class clazz=gcl.parseClass(ccFile);
         service.addToCategoryInternal(new ComponentDefinition(typeClass:clazz));
+        assertTrue service.getCategoriesFromDefinition(new ComponentDefinition(typeClass:clazz)).size()>0;
         assertTrue service.getDefinitionsFromCategory("CAT1").size()>0;
         assertTrue service.getDefinitionsFromCategory("CAT2").size()>0;
     }
