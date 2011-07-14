@@ -18,13 +18,13 @@ class GraphImportService {
             if (ComposedComponent.isAssignableFrom(clazz)) {
                 return new ComposedComponentGraphImport().importGraph(clazz, content);
             }
+
+            if (Script.isAssignableFrom(clazz)) {
+                return new DynamicModelGraphImport().importFromTracing(content);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-    }
-
-    AbstractGraphModel importDynamicModel(String content) {
-        return new DynamicModelGraphImport().importFromTracing(content);
     }
 }
