@@ -1,31 +1,19 @@
 package org.pillarone.riskanalytics.graph.core.layout
 
-import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
 
 class GraphLayoutService {
 
-    private static GraphLayoutService graphLayoutService;
-
-    private GraphLayoutService() {
-
-    }
-
-    public static GraphLayoutService getInstance() {
-        if (graphLayoutService == null)
-            graphLayoutService = new GraphLayoutService()
-        return graphLayoutService;
-    }
-
     public boolean findLayout(long userId, String layoutName, String graphName) {
-        return (GraphLayout.find("from GraphLayout where userId=? and layoutName=? and graphModelName=?", [userId, layoutName, graphName]) != null);
+        return (loadLayout(userId, layoutName, graphName) != null);
     }
 
     public void saveLayout(long userId, String layoutName, String graphName, List<ComponentLayout> components) {
         GraphLayout layout;
 
-        if ((layout = GraphLayout.find("from GraphLayout where userId=? and layoutName=? and graphModelName=?", [userId, layoutName, graphName])) != null) {
+        if ((layout = loadLayout(userId, layoutName, graphName)) != null) {
             layout.components.clear();
         } else {
             layout = new GraphLayout(userId: userId, layoutName: layoutName, graphModelName: graphName);
@@ -58,7 +46,11 @@ class GraphLayoutService {
         GraphLayout layout;
         if ((layout = GraphLayout.find("from GraphLayout where userId=? and layoutName=? and graphModelName=?", [userId, layoutName, graphName])) == null)
             return null;
-        return layout.components;
+        Set<ComponentLayout> s = new HashSet<ComponentLayout>();
+        for (ComponentLayout cl: layout.components) {
+            s.add(new ComponentLayout(name:cl.name,type:cl.type,x:cl.x,y:cl.y,h:cl.h,w:cl.w,unfolded: cl.unfolded));
+        }
+        return s;
     }
 
     public Map<ComponentNode, ComponentLayout> resolveGraphModel(AbstractGraphModel m, Set<ComponentLayout> layouts) {
