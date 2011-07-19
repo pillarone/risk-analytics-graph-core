@@ -10,6 +10,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentNode
 
 class LayoutPersistenceTests extends GroovyTestCase {
 
+    GraphLayoutService graphLayoutService;
     void testStoreLoad() {
         ModelGraphModel model = new ModelGraphModel("name", "package")
         ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name")
@@ -21,21 +22,21 @@ class LayoutPersistenceTests extends GroovyTestCase {
             componentLayouts.add(new ComponentLayout(name: n.name, type: n.type.typeClass, x: i, y: i));
             i++
         }
-        GraphLayoutService.getInstance().saveLayout(0, "test", model.packageName + "." + model.name, componentLayouts)
+        graphLayoutService.saveLayout(0, "test", model.packageName + "." + model.name, componentLayouts)
 
-        Set<ComponentLayout> result = GraphLayoutService.getInstance().loadLayout(0, "test", model.packageName + "." + model.name);
+        Set<ComponentLayout> result = graphLayoutService.loadLayout(0, "test", model.packageName + "." + model.name);
         assertEquals model.allComponentNodes.size(), result.size()
         for (i = 0; i < result.size(); i++) {
             assertNotNull result.find {it.x == i}
             assertNotNull result.find {it.y == i}
         }
-        GraphLayoutService.getInstance().deleteLayout(0, model.packageName + "." + model.name);
-        assertEquals false, GraphLayoutService.getInstance().findLayout(0, "test", model.packageName + "." + model.name)
+        graphLayoutService.deleteLayout(0, model.packageName + "." + model.name);
+        assertEquals false, graphLayoutService.findLayout(0, "test", model.packageName + "." + model.name)
 
-        GraphLayoutService.getInstance().saveLayout(0, "test", model.packageName + "." + model.name, createLayouts(model));
-        result = GraphLayoutService.getInstance().loadLayout(0, "test", model.packageName + "." + model.name);
+        graphLayoutService.saveLayout(0, "test", model.packageName + "." + model.name, createLayouts(model));
+        result = graphLayoutService.loadLayout(0, "test", model.packageName + "." + model.name);
 
-        Map<ComponentNode, ComponentLayout> m = GraphLayoutService.getInstance().resolveGraphModel(model, result);
+        Map<ComponentNode, ComponentLayout> m = graphLayoutService.resolveGraphModel(model, result);
 
         assertEquals 4, m.values().size();
 
