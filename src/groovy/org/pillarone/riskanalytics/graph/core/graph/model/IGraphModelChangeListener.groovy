@@ -11,6 +11,10 @@ interface IGraphModelChangeListener {
 
     void nodeRemoved(ComponentNode node)
 
+    void outerPortAdded(Port p)
+
+    void outerPortRemoved(Port p)
+
     void nodesSelected(List<ComponentNode> nodes)
 
     void connectionsSelected(List<Connection> connections)
