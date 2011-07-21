@@ -10,6 +10,9 @@
     <property name="target.dir" value="target"/>
     <property name="doc.dir" value="docs/gapi"/>
 
+    <property name="build.prod.dir" value="${user.home}/.grails/${app.grails.version}/projects/${app.name}"/>
+    <property name="plugin.dir" value="${build.prod.dir}/plugins"/>
+
     <condition property="grails" value="${GRAILS_HOME}/bin/grails.bat">
         <os family="windows"/>
     </condition>
@@ -39,6 +42,13 @@
             <fileset dir="." includes="**Db.properties"/>
             <fileset dir="." includes="*.tsl"/>
             <fileset dir="." includes="*.log"/>
+        </delete>
+    </target>
+
+    <target name="clean-plugins"
+            description="Removes all plugins files from the plugin dir. Useful for build servers to avoid grails trying to uninstall an old plugin after an upgrade.">
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${plugin.dir}" includes="**/*"/>
         </delete>
     </target>
 

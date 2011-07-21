@@ -21,7 +21,7 @@ grails.project.dependency.resolution = {
 
         test ":code-coverage:1.2.2"
 
-        if (appName == "RiskAnalyticsGraphCore") {
+        if (appName == "risk-analytics-graph-core") {
             runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.6-kti"
             //runtime ("org.pillarone:risk-analytics-property-casualty:1.4-ALPHA-1.2-kti") { transitive = false }
         }
