@@ -1,10 +1,16 @@
 package org.pillarone.riskanalytics.graph.core.graph.util
 
+import org.pillarone.riskanalytics.core.util.ResourceBundleRegistry
+import java.text.MessageFormat
+
 /**
  * @author fouad.jaada@intuitive-collaboration.com
  */
 
-//todo fja moving this class to core
+//todo this class will be deleted
+// at the moment, it belongs to RA.
+// for common using of this methods, a plugins with RA utilities will be created
+//now it s just for test
 class UIUtils {
 
     public static String formatDisplayName(String name) {
@@ -21,7 +27,7 @@ class UIUtils {
         if (name.startsWith("out")) {
             name = name.substring(3)
         }
-         if (name.startsWith("in")) {
+        if (name.startsWith("in")) {
             name = name.substring(2)
         }
 
@@ -66,5 +72,49 @@ class UIUtils {
         }
         value = displayNameBuffer.toString()
         return value.replaceAll("  ", " ")
+    }
+
+    static Locale getLocale() {
+        return new Locale("en", "US")
+    }
+
+    static Set getBundles(String key) {
+        def resourceBundle = []
+        def resources = ResourceBundleRegistry.getBundles(key)
+        for (String bundleName in resources) {
+            resourceBundle << ResourceBundle.getBundle(bundleName, getLocale())
+        }
+        return resourceBundle
+    }
+
+    public static String getPropertyValue(Set bundles, String bundleKey, String arg) {
+        if (!bundles)
+            bundles = getBundles(bundleKey)
+        return getTextByResourceBundles(bundles, arg)
+    }
+
+    private static String getTextByResourceBundles(Set bundles, String argument) {
+        def keys = null
+        String text = ""
+        try {
+            argument = argument.replaceAll("\n", "")
+            for (ResourceBundle resourceBundle: bundles) {
+                keys = (List) new GroovyShell().evaluate(argument)
+                try {
+                    text = resourceBundle.getString(keys[0])
+                } catch (Exception ex) {}
+                if (text) {
+                    List args = []
+                    keys.eachWithIndex {String key, int index ->
+                        if (index > 0) {
+                            args << key
+                        }
+                    }
+                    if (args.size() > 0)
+                        text = MessageFormat.format(text, args.toArray())
+                }
+            }
+        } catch (Exception ex) { /*ignore the exception*/}
+        return text;
     }
 }

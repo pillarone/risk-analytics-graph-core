@@ -21,12 +21,18 @@ class ComponentNode extends GraphElement {
         return composedComponent
     }
 
+    /**
+     *
+     * @param name is the portType(OUT or IN) + port name(name-portType)
+     * @return
+     */
     Port getPort(String name) {
-        return (inPorts + outPorts).find { it.name == name}
+        name = name.toLowerCase()
+        return (inPorts + outPorts).find { it.name.toLowerCase() == name}
     }
 
     boolean hasPorts() {
-        return inPorts?.size()>0 || outPorts?.size()> 0
+        return inPorts?.size() > 0 || outPorts?.size() > 0
     }
 
 }
