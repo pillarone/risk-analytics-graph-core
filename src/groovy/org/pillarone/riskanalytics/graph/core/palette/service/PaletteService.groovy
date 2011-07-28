@@ -34,7 +34,7 @@ class PaletteService {
             for (ComponentDefinition definition: cache) {
                 addToCategoryInternal(definition);
             }
-
+            Collections.sort(cache, ComponentDefinition.getComparator());
         }
         return cache
     }
@@ -78,8 +78,8 @@ class PaletteService {
         }
     }
 
-    public void clearCache(){
-        cache=null;
+    public void clearCache() {
+        cache = null;
         categoryCache.clear();
     }
 
