@@ -17,6 +17,10 @@ class ComponentDefinition {
         return new ComponentDefinitionComparator<ComponentDefinition>()
     }
 
+    /**
+     * compare ComponentDefinition by class simpleName
+     * @param < T >
+     */
     private static class ComponentDefinitionComparator<T extends ComponentDefinition> implements Comparator {
 
         int compare(Object o1, Object o2) {
