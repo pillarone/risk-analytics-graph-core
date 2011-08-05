@@ -21,6 +21,15 @@ public class TraceImport implements IPacketListener {
 
     ModelGraphModel mgm;
 
+    /** *
+     * Traced packets are stored in a map with following structure:
+     * <Component sender, <PacketList src,List(Component receiver, PacketList dst, PacketIDs ids)>>
+     *
+     * For each originating tuple (sender, src), its destination tuples (receiver, dst) and the ids leading over this
+     * connection (sender,src -> receiver,dst) are stored.
+     * @param t currently used transmitter
+     * @param packets sent packets
+     */
     void packetSent(Transmitter t, PacketList packets) {
 
         List<ComponentPort> dst = fillConnections(t.sender, t.source);
@@ -48,25 +57,28 @@ public class TraceImport implements IPacketListener {
         return ports.get(new ListAsKey(p));
     }
 
-
+    /**
+     * Resolving connections by considering collected packet information.
+     */
     public void resolveConnections() {
+        //Iterating over "concrete" components (non-dynamic) with existing connection only
         for (Component c: connections.keySet()) {
             if (!resolveComponent(c)) {
                 HashMap<ListAsKey, List<ComponentPort>> ports = connections.get(c);
+                //Get corresponding ComponentNode
                 ComponentNodeParent src = componentCache.get(c);
+                //Iterating over all ports of corresponding component (where a connection is applied)
                 for (ListAsKey p: ports.keySet()) {
                     List<ComponentPort> destinations = new ArrayList<ComponentPort>();
-
                     String srcPort = WiringUtils.getSenderChannelName(c, p.packetList);
+                    //Resolve connections of port
                     getDestinations(c, p.packetList, null, destinations);
-                    if (destinations.find {it.component.name.contains("subWxl")} != null) {
-                        int x = 0;
-                    }
                     for (ComponentPort cp: destinations) {
                         ComponentNodeParent dst = componentCache.get(cp.component);
                         String dstPort = WiringUtils.getSenderChannelName(cp.component, cp.packetList);
                         if (src == null || dst == null)
                             continue;
+                        //if connection leads "out of hierarchy level" (must be a replicated connection)
                         if (src.parent != dst.parent) {
                             // If replicated connections should be added lazy (so only connections created which are used in a running model, no static wired)
                             /*if (src.componentNode instanceof ComposedComponentNode) {
@@ -93,16 +105,27 @@ public class TraceImport implements IPacketListener {
         }
     }
 
+    /** *
+     * Recursively determining destinations of connection originating from specified sender and source.
+     * DynamicComponents will be resolved to its inner components/connections.
+     * @param sender originating sender
+     * @param source originating source
+     * @param ids null (ids filled recursively)
+     * @param destinations returned destinations
+     */
     private void getDestinations(Component sender, PacketList source, Set<UUID> ids, List<ComponentPort> destinations) {
         HashMap<ListAsKey, List<ComponentPort>> ports = connections.get(sender);
         List<ComponentPort> dst;
+        //Get all connections originating from sender,source
         dst = ports.get(new ListAsKey(source));
 
         if (dst == null) {
             return;
         }
         for (ComponentPort cp: dst) {
+            //consider only connections out of originating component (ids=null) or intermediate connections containing ids
             if (ids == null || contained(ids, cp.ids)) {
+                //if component is resolved (is DynamicComposedComponent), get further destinations leading over its replicated ports
                 if (resolveComponent(cp.component)) {
                     getDestinations(cp.component, cp.packetList, ids == null ? cp.ids : ids, destinations);
                 } else {
@@ -120,8 +143,13 @@ public class TraceImport implements IPacketListener {
         }
     }
 
-    //check if receiving composedcomponent needs to be wired (by checking all inner components)
-
+    /** *
+     * Check if receiving ComposedComponent needs to be wired (by checking all inner components)
+     * @param receiver
+     * @param source
+     * @param ids
+     * @return
+     */
     private boolean isComposedWired(ComposedComponent receiver, PacketList source, Set<UUID> ids) {
         List<ComponentPort> dst = new ArrayList<ComponentPort>();
         boolean ret = false;
@@ -145,7 +173,12 @@ public class TraceImport implements IPacketListener {
         return false;
     }
 
-
+    /** *
+     * Check if component needs to be resolved (resolved meaning use its inner components and inner wiring)
+     * Default: component instanceof DynamicComposedComponent
+     * @param c
+     * @return
+     */
     private boolean resolveComponent(Component c) {
         if (DynamicComposedComponent.isAssignableFrom(c.class))
             return true;
@@ -159,6 +192,13 @@ public class TraceImport implements IPacketListener {
         return false;
     }
 
+    /** *
+     * Components of a running model are stored in a Map with following structure:
+     * Map <Component, <(ComponentNode n,GraphModel parent)>
+     * So for each Component its corresponding node in the graphmodel and its place in the hierarchy (its parent)
+     * are determined.
+     * @param m
+     */
     public void initComponentCache(Model m) {
         mgm = new ModelGraphModel(m.class.simpleName, m.class.package.name);
         for (Component c: m.allComponents) {
@@ -191,6 +231,12 @@ public class TraceImport implements IPacketListener {
         }
     }
 
+    /** *
+     * Create a composedcomponent node by resolving the inner components and connections
+     * @param cc
+     * @param model
+     * @return
+     */
     private ComponentNode createCCNode(ComposedComponent cc, AbstractGraphModel model) {
 
         ComposedComponentNode cn = model.createComponentNode(PaletteService.getInstance().getComponentDefinition(cc.class), cc.name);
@@ -200,7 +246,7 @@ public class TraceImport implements IPacketListener {
         }
         addOuterPorts(graph, cc);
 
-        //add replicated connections based on static inforumation (not on running model)
+        //add replicated connections based on static information (not on running model)
         List<PacketList> inProcessed = new ArrayList<PacketList>();
         for (Transmitter t: cc.allInputReplicationTransmitter) {
             if (inProcessed.find {it.is(t.source)} == null) {
@@ -287,7 +333,12 @@ public class TraceImport implements IPacketListener {
         }
     }
 
-
+    /**
+     * Only concrete components are added to the graphmodel m. If its a DynamicComposedComponent, its inner components
+     * are added.
+     * @param c
+     * @param m
+     */
     private void addComponentToModel(Component c, AbstractGraphModel m) {
         if (resolveComponent(c)) {
 
