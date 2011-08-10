@@ -7,8 +7,7 @@ grails.project.dependency.resolution = {
         grailsCentral()
     }
 
-    //even though this plugin does not need anything from this repo, it has to be added for the deploy script to check existing plugins
-    mavenRepo "https://build.intuitive-collaboration.com/maven/plugins/"
+    mavenRepo "https://repository.intuitive-collaboration.com/nexus/content/repositories/pillarone-public/"
 
     plugins {
         runtime ":background-thread:1.3"
@@ -19,32 +18,35 @@ grails.project.dependency.resolution = {
         runtime ":spring-security-core:1.1.2"
         runtime ":tomcat:1.3.7"
 
-        test ":code-coverage:1.2.2"
+        test ":code-coverage:1.2.4"
 
-        if (appName == "RiskAnalyticsGraphCore") {
+        if (appName == "risk-analytics-graph-core") {
             runtime "org.pillarone:risk-analytics-core:1.4-ALPHA-2.5.6-kti"
-            //runtime ("org.pillarone:risk-analytics-property-casualty:1.4-ALPHA-1.2-kti") { transitive = false }
         }
     }
 }
 
 grails.project.dependency.distribution = {
-    String passPhrase = ""
+    String password = ""
+    String user = ""
     String scpUrl = ""
     try {
         Properties properties = new Properties()
         properties.load(new File("${userHome}/deployInfo.properties").newInputStream())
 
-        passPhrase = properties.get("passPhrase")
+        user = properties.get("user")
+        password = properties.get("password")
         scpUrl = properties.get("url")
     } catch (Throwable t) {
     }
     remoteRepository(id: "pillarone", url: scpUrl) {
-        authentication username: 'root', privateKey: "${userHome.absolutePath}/.ssh/id_rsa", passphrase: passPhrase
+        authentication username: user, password: password
     }
 }
 
 coverage {
+    enabledByDefault = true
+    xml = true
     exclusions = [
             'models/**',
             '**/*Test*',
@@ -56,7 +58,5 @@ coverage {
             '**TagLib**'
     ]
 
-}
 
-//grails.plugin.location.'risk-analytics-core' = "../RiskAnalyticsCore"
-//grails.plugin.location.'risk-analytics-pc' = "../RiskAnalyticsPC"
+}

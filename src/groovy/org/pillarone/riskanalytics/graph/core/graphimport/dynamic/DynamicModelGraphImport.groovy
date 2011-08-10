@@ -20,6 +20,9 @@ import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.graphimport.TraceImport
 
+/**
+ * Import of a graphmodel from a running model
+ */
 public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
 
     @Deprecated
@@ -40,6 +43,11 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         return mg;
     }
 
+    /** *
+     * Create a graph model out of a parameter file's content
+     * @param parameter file content
+     * @return
+     */
     public ModelGraphModel importFromTracing(String content) {
 
         String fileContent = getFileContent(content)
@@ -61,6 +69,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
                 simulation: run, outputStrategy: new NoOutput(),
                 simulationBlocks: [new SimulationBlock(0, run.numberOfIterations, 0)]
         )
+        //Add PacketListener, so packets are traced while running a simulation
         simulationConfiguration.packetListener = ipl;
 
         SimulationRunner runner = SimulationRunner.createRunner();
@@ -72,6 +81,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         return ipl.mgm;
     }
 
+    @Deprecated
     public ModelGraphModel createFromWired(Model m) {
         graph = new ModelGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
         for (Component c: m.allComponents) {
