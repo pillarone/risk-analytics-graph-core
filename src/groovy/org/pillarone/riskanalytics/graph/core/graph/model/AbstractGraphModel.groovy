@@ -26,7 +26,7 @@ abstract class AbstractGraphModel extends GraphElement {
 
     protected List<IGraphModelChangeListener> graphModelChangeListeners = []
 
-    protected List<IComponentNodeFilter> nodeFilters = []
+    public List<IComponentNodeFilter> nodeFilters = []
     protected List<ComponentNode> filteredNodesList = []
     protected List<Connection> filteredConnectionsList = []
 
