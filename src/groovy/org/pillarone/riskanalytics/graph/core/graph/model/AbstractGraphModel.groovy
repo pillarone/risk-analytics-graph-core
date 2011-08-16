@@ -21,14 +21,7 @@ abstract class AbstractGraphModel extends GraphElement {
     protected List<ComponentNode> componentNodes = []
     protected List<Connection> connections = []
 
-    protected List<ComponentNode> selectedNodes = []
-    protected List<Connection> selectedConnections = []
-
     protected List<IGraphModelChangeListener> graphModelChangeListeners = []
-
-    public List<IComponentNodeFilter> nodeFilters = []
-    protected List<ComponentNode> filteredNodesList = []
-    protected List<Connection> filteredConnectionsList = []
 
     AbstractGraphModel() {
     }
@@ -70,38 +63,6 @@ abstract class AbstractGraphModel extends GraphElement {
         graphModelChangeListeners*.nodeAdded(componentNode)
     }
 
-    List<ComponentNode> getSelectedNodes() {
-        return selectedNodes;
-    }
-
-    void setSelectedNodes(List<ComponentNode> nodes, Object originator) {
-        selectedNodes = nodes
-        graphModelChangeListeners.each {
-            if (it != originator) {
-                it.nodesSelected(selectedNodes)
-            }
-        }
-    }
-
-    List<Connection> getSelectedConnections() {
-        return selectedConnections;
-    }
-
-    void setSelectedConnections(List<Connection> connections, Object originator) {
-        selectedConnections = connections
-        graphModelChangeListeners.each {
-            if (it != originator) {
-                it.connectionsSelected(selectedConnections)
-            }
-        }
-    }
-
-    void clearSelections() {
-        selectedNodes = []
-        selectedConnections = []
-        graphModelChangeListeners*.selectionCleared()
-    }
-
     void removeComponentNode(ComponentNode toRemove) {
         Iterator<Connection> iterator = connections.iterator()
         List<Connection> toRemoveList = new ArrayList<Connection>()
@@ -116,9 +77,7 @@ abstract class AbstractGraphModel extends GraphElement {
         }
 
         componentNodes.remove(toRemove)
-        if (selectedNodes.contains(toRemove)) {
-            selectedNodes.remove(toRemove)
-        }
+
         graphModelChangeListeners*.nodeRemoved(toRemove)
     }
 
@@ -147,10 +106,6 @@ abstract class AbstractGraphModel extends GraphElement {
         if (!connection.to.composedComponentOuterPort) {
             if (connection.to instanceof InPort)
                 ((InPort) (connection.to)).connectionCount--;
-        }
-
-        if (selectedConnections.contains(connection)) {
-            selectedConnections.remove(connection)
         }
 
         graphModelChangeListeners*.connectionRemoved(connection)
@@ -283,40 +238,6 @@ abstract class AbstractGraphModel extends GraphElement {
             }
         }
         return connectedNodes
-    }
-
-    void addNodeFilter(IComponentNodeFilter filter) {
-        if (!nodeFilters.contains(filter)) {
-            nodeFilters << filter
-        }
-        filteredNodesList = null
-        filteredConnectionsList = null
-        graphModelChangeListeners*.filtersApplied()
-    }
-
-    void clearNodeFilters() {
-        nodeFilters = []
-        filteredNodesList = null
-        filteredConnectionsList = null
-        graphModelChangeListeners*.filtersApplied()
-    }
-
-    List<ComponentNode> getFilteredComponentsList() {
-        if (filteredNodesList) return filteredNodesList
-        List<ComponentNode> filteredList = componentNodes
-        for (IComponentNodeFilter filter: nodeFilters) {
-            filteredList = filter.filterNodesList(filteredList)
-        }
-        return filteredList
-    }
-
-    List<Connection> getFilteredConnectionsList() {
-        if (filteredConnectionsList) return filteredConnectionsList
-        List<Connection> filteredList = connections
-        for (IComponentNodeFilter filter: nodeFilters) {
-            filteredList = filter.filterConnectionsList(filteredList)
-        }
-        return filteredList
     }
 
     /**

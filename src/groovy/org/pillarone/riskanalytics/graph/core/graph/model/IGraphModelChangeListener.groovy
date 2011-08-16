@@ -19,23 +19,4 @@ interface IGraphModelChangeListener {
 
     void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue)
 
-    /**
-     * @deprecated
-     */
-    void nodesSelected(List<ComponentNode> nodes)
-
-    /**
-     * @deprecated
-     */
-    void connectionsSelected(List<Connection> connections)
-
-    /**
-     * @deprecated
-     */
-    void filtersApplied()
-
-    /**
-     * @deprecated
-     */
-    void selectionCleared()
 }
