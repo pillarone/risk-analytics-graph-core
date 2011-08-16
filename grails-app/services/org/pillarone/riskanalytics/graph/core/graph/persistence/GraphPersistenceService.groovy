@@ -197,7 +197,7 @@ class GraphPersistenceService {
     }
 
     //TODO: probably belongs somewhere else
-    void deployClass(Class<? extends Model> modelClass) {
+    void deployClass(Class modelClass) {
         ModelRegistry.instance.addModel(modelClass)
     }
 }
