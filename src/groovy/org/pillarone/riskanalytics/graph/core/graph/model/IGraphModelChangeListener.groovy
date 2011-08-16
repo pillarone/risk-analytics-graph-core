@@ -1,5 +1,7 @@
 package org.pillarone.riskanalytics.graph.core.graph.model
 
+import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
+
 
 interface IGraphModelChangeListener {
 
@@ -15,13 +17,25 @@ interface IGraphModelChangeListener {
 
     void outerPortRemoved(Port p)
 
+    void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue)
+
+    /**
+     * @deprecated
+     */
     void nodesSelected(List<ComponentNode> nodes)
 
+    /**
+     * @deprecated
+     */
     void connectionsSelected(List<Connection> connections)
 
-    void selectionCleared()
-
+    /**
+     * @deprecated
+     */
     void filtersApplied()
 
-    void nodePropertyChanged(ComponentNode node, String propertyName, Object oldValue, Object newValue)
+    /**
+     * @deprecated
+     */
+    void selectionCleared()
 }
