@@ -1,17 +1,19 @@
 package org.pillarone.riskanalytics.graph.core.graph.model
 
-import java.lang.reflect.Field
-import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.core.packets.PacketList
 import org.pillarone.riskanalytics.core.packets.Packet
-import java.lang.reflect.Type
-import java.lang.reflect.ParameterizedType
+
 import org.pillarone.riskanalytics.core.components.Component
+
+import org.pillarone.riskanalytics.core.components.ComposedComponent
+
+import org.pillarone.riskanalytics.core.components.MultiPhaseComponent
+import java.lang.reflect.Field
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 import java.util.Map.Entry
 import org.pillarone.riskanalytics.graph.core.graph.wiringvalidation.WiringValidationUtil
-import org.pillarone.riskanalytics.core.components.ComposedComponent
-import org.pillarone.riskanalytics.graph.core.graph.model.filters.IComponentNodeFilter
-import org.pillarone.riskanalytics.core.components.MultiPhaseComponent
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 
 abstract class AbstractGraphModel extends GraphElement {
 
