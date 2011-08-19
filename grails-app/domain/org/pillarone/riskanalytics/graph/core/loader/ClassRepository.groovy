@@ -3,6 +3,7 @@ package org.pillarone.riskanalytics.graph.core.loader
 class ClassRepository {
 
     String name
+    ClassType classType
     byte[] data
 
     String toString() {

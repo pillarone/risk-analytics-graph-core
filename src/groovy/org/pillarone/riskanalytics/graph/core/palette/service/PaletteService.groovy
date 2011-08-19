@@ -7,14 +7,18 @@ import org.pillarone.riskanalytics.core.components.Component
 import org.pillarone.riskanalytics.graph.core.palette.Palette
 import org.pillarone.riskanalytics.graph.core.palette.PaletteEntry
 import org.pillarone.riskanalytics.core.components.ComponentCategory
+import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
+import org.pillarone.riskanalytics.graph.core.loader.ClassType
 
 
 class PaletteService {
 
     private static PaletteService service
-    private static List<ComponentDefinition> cache
+    private List<ComponentDefinition> cache
     private Map<String, List<ComponentDefinition>> categoryCache = new HashMap<String, List<ComponentDefinition>>();
-    public static String CAT_OTHER = "Others";
+    public static final String CAT_OTHER = "Others";
+
+    private List<IPaletteServiceListener> listeners = []
 
     public static PaletteService getInstance() {
         if (service == null) {
@@ -29,8 +33,11 @@ class PaletteService {
             ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false)
             provider.addIncludeFilter(new AssignableTypeFilter(Component))
             cache = provider.findCandidateComponents("org.pillarone")*.beanClassName.collect {
-                new ComponentDefinition(typeClass: getClass().getClassLoader().loadClass(it))
+                new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it))
             }
+            cache.addAll(ClassRepository.findAllByClassType(ClassType.COMPONENT).collect {
+                new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it.name))
+            })
             for (ComponentDefinition definition: cache) {
                 addToCategoryInternal(definition);
             }
@@ -44,7 +51,7 @@ class PaletteService {
     }
 
     ComponentDefinition getComponentDefinition(String className) {
-        return getComponentDefinition(getClass().getClassLoader().loadClass(className))
+        return getComponentDefinition(Thread.currentThread().getContextClassLoader().loadClass(className))
     }
 
     public void addToCategoryInternal(ComponentDefinition definition) {
@@ -125,4 +132,21 @@ class PaletteService {
         }
     }
 
+    void addComponentDefinition (ComponentDefinition definition) {
+        cache.add(definition)
+        Collections.sort(cache, ComponentDefinition.getComparator());
+        fireComponentAdded(definition)
+    }
+
+    void addPaletteServiceListener(IPaletteServiceListener listener) {
+        listeners << listener
+    }
+
+    void removePaletteServiceListener(IPaletteServiceListener listener) {
+        listeners.remove(listener)
+    }
+
+    protected void fireComponentAdded(ComponentDefinition definition) {
+        listeners*.componentDefinitionAdded(definition)
+    }
 }

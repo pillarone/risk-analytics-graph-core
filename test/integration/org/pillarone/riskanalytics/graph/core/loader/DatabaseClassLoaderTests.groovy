@@ -79,10 +79,10 @@ class TestModel extends Model {
         compiler.compile([objectFile, modelFile] as File[])
 
         File model = new File(output, "some/packagename/TestModel.class")
-        assertNotNull new ClassRepository(name: "some.packagename.TestModel", data: model.bytes).save()
+        assertNotNull new ClassRepository(name: "some.packagename.TestModel", data: model.bytes, classType: ClassType.MODEL).save()
 
         File object = new File(output, "some/packagename/SomeObject.class")
-        assertNotNull new ClassRepository(name: "some.packagename.SomeObject", data: object.bytes).save()
+        assertNotNull new ClassRepository(name: "some.packagename.SomeObject", data: object.bytes, classType: ClassType.DEPENDENCY).save()
     }
 
     void testLoadClass() {

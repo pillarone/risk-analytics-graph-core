@@ -2,6 +2,8 @@ package org.pillarone.riskanalytics.graph.core.palette.service
 
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.core.example.component.TestComponent
+import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
+import org.pillarone.riskanalytics.graph.core.loader.ClassType
 
 class PaletteServiceTests extends GroovyTestCase {
     String ccFile = """
