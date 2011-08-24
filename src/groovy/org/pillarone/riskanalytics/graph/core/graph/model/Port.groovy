@@ -22,6 +22,8 @@ abstract class Port extends GraphElement {
 
     abstract protected boolean internalAllowedToConnectTo(Port port)
 
+    abstract public String getPrefix()
+
     @Override
     String toString() {
         return "$name (${packetType.simpleName})"

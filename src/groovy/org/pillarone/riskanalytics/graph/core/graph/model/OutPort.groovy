@@ -26,4 +26,10 @@ class OutPort extends Port {
         return false
     }
 
+    @Override
+    public String getPrefix() {
+        return OUT_PORT_PREFIX
+    }
+
+
 }

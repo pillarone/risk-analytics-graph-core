@@ -31,5 +31,10 @@ class InPort extends Port {
         return connectionCardinality == null ? true : connectionCount < connectionCardinality.to;
     }
 
+    @Override
+    public String getPrefix() {
+        return IN_PORT_PREFIX
+    }
+
 
 }
