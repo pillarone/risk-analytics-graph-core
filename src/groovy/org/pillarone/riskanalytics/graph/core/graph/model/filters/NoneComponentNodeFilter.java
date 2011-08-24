@@ -3,11 +3,12 @@ package org.pillarone.riskanalytics.graph.core.graph.model.filters;
 import org.pillarone.riskanalytics.graph.core.graph.model.AbstractGraphModel;
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode;
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection;
+import org.pillarone.riskanalytics.graph.core.graph.model.Port;
 
 import java.util.List;
 
 /**
- * 
+ *
  */
 public class NoneComponentNodeFilter implements IComponentNodeFilter {
 
@@ -20,6 +21,10 @@ public class NoneComponentNodeFilter implements IComponentNodeFilter {
     }
 
     public boolean isSelected(ComponentNode node) {
+        return true;
+    }
+
+    public boolean isSelected(Port port) {
         return true;
     }
 

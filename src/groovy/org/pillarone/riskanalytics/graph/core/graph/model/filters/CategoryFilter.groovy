@@ -5,6 +5,7 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
 import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
+import org.pillarone.riskanalytics.graph.core.graph.model.Port
 
 /**
  *
@@ -15,11 +16,11 @@ class CategoryFilter extends AbstractComponentNodeFilter {
     PaletteService fPalette
 
     CategoryFilter(String expr) {
-        if (!expr.startsWith('.*')){
-            expr = '.*'+expr
+        if (!expr.startsWith('.*')) {
+            expr = '.*' + expr
         }
-        if (!expr.endsWith('.*')){
-            expr = expr+'.*'
+        if (!expr.endsWith('.*')) {
+            expr = expr + '.*'
         }
         fPattern = expr
 
@@ -28,12 +29,20 @@ class CategoryFilter extends AbstractComponentNodeFilter {
 
     @Override
     boolean isSelected(ComponentNode node) {
+        if (node == null) return false;
         List<String> categories = fPalette.getCategoriesFromDefinition(node.getType())
-        for (String category : categories) {
+        for (String category: categories) {
             if (category.matches(fPattern)) {
                 return true
             }
         }
         return false
     }
+
+    boolean isSelected(Port port) {
+        if (port == null) return false
+        return !port.isComposedComponentOuterPort()
+    }
+
+
 }
