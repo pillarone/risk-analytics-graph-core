@@ -9,11 +9,15 @@ import org.pillarone.riskanalytics.graph.core.palette.PaletteEntry
 import org.pillarone.riskanalytics.core.components.ComponentCategory
 import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
 import org.pillarone.riskanalytics.graph.core.loader.ClassType
+import org.apache.commons.logging.LogFactory
+import org.apache.commons.logging.Log
 
 
 class PaletteService {
 
-    private static PaletteService service
+    private static Log LOG = LogFactory.getLog(PaletteService)
+    private static IPaletteServiceAccessor serviceAccessor
+
     private List<ComponentDefinition> cache
     private Map<String, List<ComponentDefinition>> categoryCache = new HashMap<String, List<ComponentDefinition>>();
     public static final String CAT_OTHER = "Others";
@@ -21,11 +25,25 @@ class PaletteService {
     private List<IPaletteServiceListener> listeners = []
 
     public static PaletteService getInstance() {
-        if (service == null) {
-            service = new PaletteService()
+        if (serviceAccessor == null) {
+            ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false)
+            provider.addIncludeFilter(new AssignableTypeFilter(org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceAccessor))
+            List<Class> classes = provider.findCandidateComponents("org.pillarone")*.beanClassName.collect {
+                Thread.currentThread().getContextClassLoader().loadClass(it)
+            }
+            if (classes.empty) {
+                throw new IllegalStateException("No IPaletteServiceAccessor found on classpath.")
+            }
+
+            Class accessorClass = classes.find { !it.name.startsWith("org.pillarone.riskanalytics.graph.core") }
+            if (accessorClass == null) {
+                accessorClass = classes[0]
+            }
+
+            serviceAccessor = accessorClass.newInstance()
         }
 
-        return service
+        return serviceAccessor.obtainService()
     }
 
     List<ComponentDefinition> getAllComponentDefinitions() {
@@ -132,7 +150,7 @@ class PaletteService {
         }
     }
 
-    void addComponentDefinition (ComponentDefinition definition) {
+    void addComponentDefinition(ComponentDefinition definition) {
         cache.add(definition)
         Collections.sort(cache, ComponentDefinition.getComparator());
         fireComponentAdded(definition)
