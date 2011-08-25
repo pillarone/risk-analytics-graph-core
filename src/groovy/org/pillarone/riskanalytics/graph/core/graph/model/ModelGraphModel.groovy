@@ -15,6 +15,9 @@ class ModelGraphModel extends AbstractGraphModel {
 
 
     public List<ComponentNode> resolveStartComponents() {
+        if (!startComponents.empty) {
+            return startComponents;
+        }
         List<ComponentNode> startComponents = new ArrayList<ComponentNode>();
         for (ComponentNode c: allComponentNodes) {
             boolean inConnected;
