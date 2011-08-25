@@ -4,6 +4,7 @@ import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.core.example.component.TestComponent
 import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
 import org.pillarone.riskanalytics.graph.core.loader.ClassType
+import java.lang.instrument.ClassDefinition
 
 class PaletteServiceTests extends GroovyTestCase {
     String ccFile = """
@@ -75,5 +76,14 @@ public class TestCC
         assertTrue service.getCategoriesFromDefinition(new ComponentDefinition(typeClass:clazz)).size()>0;
         assertTrue service.getDefinitionsFromCategory("CAT1").size()>0;
         assertTrue service.getDefinitionsFromCategory("CAT2").size()>0;
+    }
+
+    void testAddComponent() {
+        final PaletteService service = PaletteService.getInstance()
+        ComponentDefinition definition = new ComponentDefinition(typeClass: String)
+        service.addComponentDefinition(definition)
+        final List<ComponentDefinition> definitions = service.getDefinitionsFromCategory(PaletteService.CAT_OTHER)
+        assertTrue(definitions*.typeClass.contains(String))
+        assertNotNull(service.getComponentDefinition(String.name))
     }
 }

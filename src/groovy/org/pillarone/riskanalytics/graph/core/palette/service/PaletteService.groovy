@@ -24,6 +24,10 @@ class PaletteService {
 
     private List<IPaletteServiceListener> listeners = []
 
+    PaletteService() {
+        initCache();
+    }
+
     public static PaletteService getInstance() {
         if (serviceAccessor == null) {
             ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false)
@@ -47,21 +51,24 @@ class PaletteService {
     }
 
     List<ComponentDefinition> getAllComponentDefinitions() {
-        if (cache == null) {
-            ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false)
-            provider.addIncludeFilter(new AssignableTypeFilter(Component))
-            cache = provider.findCandidateComponents("org.pillarone")*.beanClassName.collect {
-                new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it))
-            }
-            cache.addAll(ClassRepository.findAllByClassType(ClassType.COMPONENT).collect {
-                new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it.name))
-            })
-            for (ComponentDefinition definition: cache) {
-                addToCategoryInternal(definition);
-            }
-            Collections.sort(cache, ComponentDefinition.getComparator());
+        return Collections.unmodifiableList(cache)
+    }
+
+    private void initCache() {
+        List<ComponentDefinition> cache
+        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false)
+        provider.addIncludeFilter(new AssignableTypeFilter(Component))
+        cache = provider.findCandidateComponents("org.pillarone")*.beanClassName.collect {
+            new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it))
         }
-        return cache
+        cache.addAll(ClassRepository.findAllByClassType(ClassType.COMPONENT).collect {
+            new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it.name))
+        })
+        for (ComponentDefinition definition: cache) {
+            addToCategoryInternal(definition);
+        }
+        Collections.sort(cache, ComponentDefinition.getComparator())
+        this.cache = cache
     }
 
     ComponentDefinition getComponentDefinition(Class clazz) {
@@ -72,7 +79,7 @@ class PaletteService {
         return getComponentDefinition(Thread.currentThread().getContextClassLoader().loadClass(className))
     }
 
-    public void addToCategoryInternal(ComponentDefinition definition) {
+    protected void addToCategoryInternal(ComponentDefinition definition) {
         ComponentCategory cc = definition.typeClass.getAnnotation(ComponentCategory);
         List<String> categories = new ArrayList<String>();
 
@@ -103,9 +110,10 @@ class PaletteService {
         }
     }
 
-    public void clearCache() {
-        cache = null;
+    public void reset() {
+        cache.clear()
         categoryCache.clear();
+        initCache()
     }
 
     public List<ComponentDefinition> getDefinitionsFromCategory(String category) {
@@ -151,10 +159,9 @@ class PaletteService {
     }
 
     void addComponentDefinition(ComponentDefinition definition) {
-        if (cache == null) {
-            cache.add(definition)
-            Collections.sort(cache, org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition.getComparator())
-        }
+        cache.add(definition)
+        Collections.sort(cache, org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition.getComparator())
+        addToCategoryInternal(definition)
         fireComponentAdded(definition)
     }
 

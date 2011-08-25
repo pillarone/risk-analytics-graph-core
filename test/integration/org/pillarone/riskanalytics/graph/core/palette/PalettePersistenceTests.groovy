@@ -14,7 +14,7 @@ class PalettePersistenceTests extends GroovyTestCase {
         ps.addToCategory("p2", new ComponentDefinition(typeClass: TestComponent.class));
         ps.storeUserCategory("p1", 1);
         ps.storeUserCategory("p2", 1);
-        ps.clearCache();
+        ps.reset();
         ps.loadUserCategories(1);
         assertEquals 2, ps.getDefinitionsFromCategory("p1").findAll {it.typeClass == TestComponent.class || it.typeClass == TestComposedComponent.class}.size()
         assertEquals 1, ps.getDefinitionsFromCategory("p2").findAll {it.typeClass == TestComponent.class}.size();
