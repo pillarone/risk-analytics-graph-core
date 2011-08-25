@@ -17,18 +17,13 @@ class ModelGraphModel extends AbstractGraphModel {
     public List<ComponentNode> resolveStartComponents() {
         List<ComponentNode> startComponents = new ArrayList<ComponentNode>();
         for (ComponentNode c: allComponentNodes) {
-            boolean inConnected, outConnected;
+            boolean inConnected;
             for (InPort inport: c.inPorts) {
                 if (allConnections.find {it.to == inport} != null) {
                     inConnected = true;
                 }
             }
-            for (OutPort outport: c.outPorts) {
-                if (allConnections.find {it.from == outport} != null) {
-                    outConnected = true;
-                }
-            }
-            if (!inConnected && outConnected) {
+            if (!inConnected) {
                 startComponents.add(c);
             }
         }
