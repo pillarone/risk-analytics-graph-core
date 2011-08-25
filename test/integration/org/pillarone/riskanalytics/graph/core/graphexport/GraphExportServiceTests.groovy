@@ -78,7 +78,6 @@ public class TestModel
         linesOfBusiness = new ExampleInputOutputComponent();
         underwritingSegments = new ExampleInputOutputComponent();
         addStartComponent underwritingSegments
-        addStartComponent claimsGenerators
     }
     public void wireComponents() {
         /**
