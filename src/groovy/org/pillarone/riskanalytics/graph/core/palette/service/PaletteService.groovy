@@ -151,8 +151,10 @@ class PaletteService {
     }
 
     void addComponentDefinition(ComponentDefinition definition) {
-        cache.add(definition)
-        Collections.sort(cache, ComponentDefinition.getComparator());
+        if (cache == null) {
+            cache.add(definition)
+            Collections.sort(cache, org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition.getComparator())
+        }
         fireComponentAdded(definition)
     }
 
