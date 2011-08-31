@@ -51,10 +51,10 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertNotNull name2_outClaims
 
         Edge edge = persistentModel.edges.toList()[0]
-        assertSame name_input3, edge.from
-        assertSame name2_outClaims, edge.to
+        assertEquals "${name.name}.${name_input3.name}", edge.from
+        assertEquals "${name2.name}.${name2_outClaims.name}", edge.to
 
-
+        persistentModel.discard()
         ModelGraphModel reloaded = graphPersistenceService.load(id)
 
         assertEquals "name", reloaded.name
@@ -106,8 +106,8 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertNotNull name2_outClaims
 
         Edge edge = persistentModel.edges.toList()[0]
-        assertSame name_input3, edge.from
-        assertSame name2_outClaims, edge.to
+        assertEquals "${name.name}.${name_input3.name}", edge.from
+        assertEquals "${name2.name}.${name2_outClaims.name}", edge.to
 
         assertEquals 2, persistentModel.ports.size()
 
@@ -195,8 +195,8 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertNotNull name2_input3
 
         Edge edge = persistentModel.edges.toList()[0]
-        assertSame name2_input3, edge.from
-        assertSame name_outClaims, edge.to
+        assertEquals "${name2.name}.${name2_input3.name}", edge.from
+        assertEquals "${name.name}.${name_outClaims.name}", edge.to
 
     }
 }

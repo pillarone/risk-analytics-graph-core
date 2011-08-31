@@ -25,8 +25,8 @@ class GraphPersistenceService {
         for (Connection connection in graphModel.allConnections) {
             model.addToEdges(
                     new Edge(
-                            from: find(model, connection.from.componentNode.name, connection.from.name),
-                            to: find(model, connection.to.componentNode.name, connection.to.name)
+                            from: "${connection.from.componentNode.name}.${connection.from.name}",
+                            to: "${connection.to.componentNode.name}.${connection.to.name}"
                     )
             )
         }
@@ -89,11 +89,6 @@ class GraphPersistenceService {
             node.addToPorts(new NodePort(name: port.name, packetClass: port.packetType.name))
         }
         return node
-    }
-
-    protected NodePort find(GraphModel model, String nodeName, String portName) {
-        Node node = model.nodes.find {it.name == nodeName}
-        return node.ports.find {it.name == portName}
     }
 
     void delete(AbstractGraphModel graphModel) {
@@ -165,9 +160,9 @@ class GraphPersistenceService {
             createdNodes << graphModel.createComponentNode(paletteService.getComponentDefinition(node.className), node.name)
         }
         for (Edge edge in model.edges) {
-            ComponentNode fromNode = createdNodes.find { it.name == edge.from.node.name }
-            ComponentNode toNode = createdNodes.find { it.name == edge.to.node.name }
-            graphModel.createConnection(fromNode.getPort(edge.from.name), toNode.getPort(edge.to.name))
+            ComponentNode fromNode = createdNodes.find { it.name == edge.from.split("\\.")[0] }
+            ComponentNode toNode = createdNodes.find { it.name == edge.to.split("\\.")[0] }
+            graphModel.createConnection(fromNode.getPort(edge.from.split("\\.")[1]), toNode.getPort(edge.to.split("\\.")[1]))
         }
         doTypeSpecificLoading(graphModel, model)
         return graphModel

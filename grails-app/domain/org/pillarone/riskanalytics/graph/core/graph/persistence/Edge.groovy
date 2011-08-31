@@ -5,12 +5,13 @@ class Edge {
 
     static belongsTo = [model: GraphModel]
 
-    NodePort from
-    NodePort to
+    //TODO: using NodePort results in Hibernate problems..
+    String from
+    String to
 
     static mapping = {
-        from(insertable: false, updateable: false)
-        to(insertable: false, updateable: false)
+        from(column: '_from')
+        to(column: '_to')
     }
 
     String toString() {
