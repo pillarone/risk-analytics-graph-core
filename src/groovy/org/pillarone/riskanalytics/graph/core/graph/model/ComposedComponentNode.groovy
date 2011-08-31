@@ -9,6 +9,12 @@ class ComposedComponentNode extends ComponentNode {
     public ComposedComponentGraphModel getComponentGraph() {
         if (componentGraph == null) {
             componentGraph = new ComposedComponentGraphImport().importGraph(type.typeClass, null)
+            for (Port p : componentGraph.outerInPorts) {
+                p.componentNode = this
+            }
+            for (Port p : componentGraph.outerOutPorts) {
+                p.componentNode = this
+            }
         }
         return componentGraph;
     }
