@@ -90,4 +90,8 @@ class ComposedComponentGraphModel extends AbstractGraphModel {
         Collections.unmodifiableList(outerOutPorts)
     }
 
+    Port getOuterPort(String name) {
+        name = name.toLowerCase()
+        return (outerInPorts + outerOutPorts).find { it.name.toLowerCase() == name}
+    }
 }
