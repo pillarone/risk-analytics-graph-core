@@ -35,13 +35,6 @@ class ComposedComponentGraphModel extends AbstractGraphModel {
     }
 
     public void removeOuterPort(Port port) {
-        if (port instanceof InPort) {
-            outerInPorts.remove(port);
-        } else {
-            outerOutPorts.remove(port);
-        }
-        graphModelChangeListeners.each {it -> it.outerPortRemoved(port) }
-
         List<Connection> toRemoveList = new ArrayList<Connection>()
         for (Connection c: connections) {
             if (c.from == port || c.to == port) {
@@ -52,6 +45,13 @@ class ComposedComponentGraphModel extends AbstractGraphModel {
         for (Connection c: toRemoveList) {
             removeConnection(c);
         }
+
+        if (port instanceof InPort) {
+            outerInPorts.remove(port);
+        } else {
+            outerOutPorts.remove(port);
+        }
+        graphModelChangeListeners.each {it -> it.outerPortRemoved(port) }
     }
 
     boolean isReplicated(Port p) {
