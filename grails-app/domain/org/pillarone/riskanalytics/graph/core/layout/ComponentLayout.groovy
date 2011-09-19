@@ -1,12 +1,26 @@
 package org.pillarone.riskanalytics.graph.core.layout
 
+import org.pillarone.riskanalytics.graph.core.graph.persistence.Node
+
 class ComponentLayout {
 
-    String name
-    Class type
+    Node node
+
     int x
     int y
-    int w
-    int h
-    boolean unfolded
+    int width
+    int height
+
+    //TODO
+//    boolean unfolded
+
+    static belongsTo = [graphLayout: GraphLayout]
+
+
+    static constraints = {
+        x(nullable: true)
+        y(nullable: true)
+        width(nullable: true)
+        height(nullable: true)
+    }
 }

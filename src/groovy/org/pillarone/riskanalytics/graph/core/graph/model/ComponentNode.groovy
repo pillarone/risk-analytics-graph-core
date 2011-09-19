@@ -2,6 +2,7 @@ package org.pillarone.riskanalytics.graph.core.graph.model
 
 import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.core.components.ComposedComponent
+import java.awt.Rectangle
 
 
 class ComponentNode extends GraphElement {
@@ -9,7 +10,8 @@ class ComponentNode extends GraphElement {
     ComponentDefinition type
     List<InPort> inPorts
     List<OutPort> outPorts
-    String comment;
+    String comment
+    Rectangle rectangle
 
     private Boolean composedComponent = null
 
