@@ -16,6 +16,7 @@ import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout
 import org.pillarone.riskanalytics.graph.core.layout.EdgeLayout
 import java.awt.Point
 import org.pillarone.riskanalytics.graph.core.layout.ControlPoint
+import java.awt.Rectangle
 
 class GraphPersistenceService {
 
@@ -218,6 +219,7 @@ class GraphPersistenceService {
 
     protected AbstractGraphModel load(GraphModel model) {
         List<ComponentNode> createdNodes = []
+        final GraphLayout layout = findOrCreateGraphLayout(model)
 
         AbstractGraphModel graphModel = getClass().getClassLoader().loadClass(model.typeClass).newInstance()
         graphModel.name = model.name
@@ -225,12 +227,25 @@ class GraphPersistenceService {
         graphModel.id = model.id
 
         for (Node node in model.nodes) {
-            createdNodes << graphModel.createComponentNode(paletteService.getComponentDefinition(node.className), node.name)
+            final ComponentNode componentNode = graphModel.createComponentNode(paletteService.getComponentDefinition(node.className), node.name)
+            ComponentLayout componentLayout = layout.components.find { it.node.id == node.id }
+            if (componentLayout != null) {
+                componentNode.setRectangle(new Rectangle(componentLayout.x, componentLayout.y, componentLayout.width, componentLayout.height))
+            }
+            createdNodes << componentNode
         }
         for (Edge edge in model.edges) {
             ComponentNode fromNode = createdNodes.find { it.name == edge.from.split("\\.")[0] }
             ComponentNode toNode = createdNodes.find { it.name == edge.to.split("\\.")[0] }
-            graphModel.createConnection(fromNode.getPort(edge.from.split("\\.")[1]), toNode.getPort(edge.to.split("\\.")[1]))
+            final Connection connection = graphModel.createConnection(fromNode.getPort(edge.from.split("\\.")[1]), toNode.getPort(edge.to.split("\\.")[1]))
+            EdgeLayout edgeLayout = layout.edges.find { it.edge.id == edge.id }
+            if (edgeLayout != null) {
+                List<Point> points = []
+                for (ControlPoint controlPoint in edgeLayout.points) {
+                    points << new Point(controlPoint.x, controlPoint.y)
+                }
+                connection.setControlPoints(points)
+            }
         }
         doTypeSpecificLoading(graphModel, model)
         return graphModel

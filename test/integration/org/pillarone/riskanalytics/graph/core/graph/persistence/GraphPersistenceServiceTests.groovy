@@ -82,7 +82,18 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertEquals "package", reloaded.packageName
 
         assertEquals 2, reloaded.allComponentNodes.size()
+        final ComponentNode reloadedNode = reloaded.allComponentNodes.find { it.name == "name"}
+        assertEquals(10, reloadedNode.getRectangle().getX())
+        assertEquals(10, reloadedNode.getRectangle().getY())
+        assertEquals(100, reloadedNode.getRectangle().getWidth())
+        assertEquals(100, reloadedNode.getRectangle().getHeight())
+
         assertEquals 1, reloaded.allConnections.size()
+        final Connection reloadedConnection = reloaded.allConnections[0]
+        assertEquals(2, reloadedConnection.controlPoints.size())
+        assertNotNull(reloadedConnection.controlPoints.find { it.x == 50 && it.y == 100})
+        assertNotNull(reloadedConnection.controlPoints.find { it.x == 100 && it.y == 200})
+
         assertEquals 1, reloaded.startComponents.size()
     }
 
@@ -194,7 +205,7 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         node.rectangle = new Rectangle(20, 20, 200, 200)
         node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "newName2")
 
-        connection =  model.createConnection(node2.getPort("input3"), node.getPort("outClaims"))
+        connection = model.createConnection(node2.getPort("input3"), node.getPort("outClaims"))
         connection.controlPoints = [new Point(10, 20), new Point(20, 30)]
 
         graphPersistenceService.save(model)
