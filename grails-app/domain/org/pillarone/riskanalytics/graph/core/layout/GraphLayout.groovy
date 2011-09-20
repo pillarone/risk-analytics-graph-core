@@ -8,14 +8,12 @@ class GraphLayout {
 
     Person person
 
-    static belongsTo = [graphModel : GraphModel]
+    static belongsTo = [graphModel: GraphModel]
 
     static hasMany = [components: ComponentLayout, edges: EdgeLayout]
 
     static constraints = {
-        if(Environment.current == Environment.TEST) {
-            person(nullable: true)
-        }
+        person(nullable: true) //test, standalone...
     }
 
 
