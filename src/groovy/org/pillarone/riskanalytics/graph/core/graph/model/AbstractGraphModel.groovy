@@ -44,16 +44,12 @@ abstract class AbstractGraphModel extends GraphElement {
     ComponentNode createComponentNode(ComponentDefinition definition, String name) {
         ComponentNode newNode
         if (ComposedComponent.isAssignableFrom(definition.typeClass)) {
-            newNode = new ComposedComponentNode(type: definition, name: name)
+            newNode = ComposedComponentNode.createInstance(definition, name)
         } else {
-            newNode = new ComponentNode(type: definition, name: name)
+            newNode = ComponentNode.createInstance(definition, name)
         }
-        newNode.inPorts = Collections.unmodifiableList(obtainInPorts(newNode))
-        newNode.outPorts = Collections.unmodifiableList(obtainOutPorts(newNode))
         componentNodes << newNode
-
         graphModelChangeListeners*.nodeAdded(newNode)
-
         return newNode
     }
 
@@ -141,47 +137,6 @@ abstract class AbstractGraphModel extends GraphElement {
 
     List<Connection> getAllConnections() {
         return Collections.unmodifiableList(connections)
-    }
-
-    protected List<InPort> obtainInPorts(ComponentNode node) {
-        List<InPort> result = []
-        for (Entry<Field, Class> entry in obtainPorts(node.type, Port.IN_PORT_PREFIX)) {
-            result << new InPort(name: entry.key.name, packetType: entry.value, componentNode: node,
-                    connectionCardinality: WiringValidationUtil.getConnectionCardinality(entry.key),
-                    packetCardinality: WiringValidationUtil.getPacketCardinality(entry.key));
-        }
-
-        return result
-    }
-
-    protected List<OutPort> obtainOutPorts(ComponentNode node) {
-        List<OutPort> result = []
-        for (Entry<Field, Class> entry in obtainPorts(node.type, Port.OUT_PORT_PREFIX)) {
-            result << new OutPort(name: entry.key.name, packetType: entry.value, componentNode: node,
-                    connectionCardinality: WiringValidationUtil.getConnectionCardinality(entry.key),
-                    packetCardinality: WiringValidationUtil.getPacketCardinality(entry.key));
-        }
-
-        return result
-    }
-
-    protected Map<Field, Class> obtainPorts(ComponentDefinition definition, String prefix) {
-        Map<String, Class> result = [:]
-        Class currentClass = definition.typeClass
-        while (currentClass != Component.class) {
-            for (Field field in currentClass.declaredFields) {
-                if (field.name.startsWith(prefix) && PacketList.isAssignableFrom(field.type)) {
-                    Class packetType = Packet
-                    Type genericType = field.genericType
-                    if (genericType instanceof ParameterizedType) {
-                        packetType = genericType.actualTypeArguments[0]
-                    }
-                    result.put(field, packetType)
-                }
-            }
-            currentClass = currentClass.superclass
-        }
-        return result
     }
 
     List<Connection> getEmergingConnections(List<ComponentNode> nodes) {
