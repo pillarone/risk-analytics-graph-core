@@ -5,6 +5,7 @@ import org.pillarone.riskanalytics.core.components.ComposedComponent
 import java.lang.reflect.Field
 import java.util.HashMap.Entry
 import org.pillarone.riskanalytics.graph.core.graph.wiringvalidation.WiringValidationUtil
+import java.awt.Rectangle
 
 
 class ComponentNode extends GraphElement {
@@ -13,6 +14,7 @@ class ComponentNode extends GraphElement {
     List<InPort> inPorts
     List<OutPort> outPorts
     String comment;
+    Rectangle rectangle
 
     private Boolean composedComponent = null
 

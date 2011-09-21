@@ -6,6 +6,13 @@ import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.core.example.packet.TestPacket
+import java.awt.Rectangle
+import org.pillarone.riskanalytics.graph.core.layout.GraphLayout
+import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout
+import org.pillarone.riskanalytics.graph.core.graph.model.Connection
+import java.awt.Point
+import org.pillarone.riskanalytics.graph.core.layout.EdgeLayout
+import org.pillarone.riskanalytics.graph.core.layout.ControlPoint
 
 class GraphPersistenceServiceTests extends GroovyTestCase {
 
@@ -14,9 +21,11 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
     void testSaveLoad() {
         ModelGraphModel model = new ModelGraphModel("name", "package")
         ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name")
+        node.rectangle = new Rectangle(10, 10, 100, 100)
         ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name2")
 
-        model.createConnection(node.getPort("input3"), node2.getPort("outClaims"))
+        final Connection connection = model.createConnection(node.getPort("input3"), node2.getPort("outClaims"))
+        connection.controlPoints = [new Point(50, 100), new Point(100, 200)]
 
         model.startComponents << node2
 
@@ -54,6 +63,18 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertEquals "${name.name}.${name_input3.name}", edge.from
         assertEquals "${name2.name}.${name2_outClaims.name}", edge.to
 
+        GraphLayout layout = GraphLayout.findByGraphModel(persistentModel)
+        final ComponentLayout nodeLayout = layout.components.find { it.node.name == "name" }
+        assertEquals(10, nodeLayout.x)
+        assertEquals(10, nodeLayout.y)
+        assertEquals(100, nodeLayout.width)
+        assertEquals(100, nodeLayout.height)
+
+        final EdgeLayout edgeLayout = layout.edges.toList()[0]
+        assertEquals(2, edgeLayout.points.size())
+        assertNotNull(edgeLayout.points.find { it.x == 50 && it.y == 100})
+        assertNotNull(edgeLayout.points.find { it.x == 100 && it.y == 200})
+
         persistentModel.discard()
         ModelGraphModel reloaded = graphPersistenceService.load(id)
 
@@ -61,7 +82,18 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertEquals "package", reloaded.packageName
 
         assertEquals 2, reloaded.allComponentNodes.size()
+        final ComponentNode reloadedNode = reloaded.allComponentNodes.find { it.name == "name"}
+        assertEquals(10, reloadedNode.getRectangle().getX())
+        assertEquals(10, reloadedNode.getRectangle().getY())
+        assertEquals(100, reloadedNode.getRectangle().getWidth())
+        assertEquals(100, reloadedNode.getRectangle().getHeight())
+
         assertEquals 1, reloaded.allConnections.size()
+        final Connection reloadedConnection = reloaded.allConnections[0]
+        assertEquals(2, reloadedConnection.controlPoints.size())
+        assertNotNull(reloadedConnection.controlPoints.find { it.x == 50 && it.y == 100})
+        assertNotNull(reloadedConnection.controlPoints.find { it.x == 100 && it.y == 200})
+
         assertEquals 1, reloaded.startComponents.size()
     }
 
@@ -132,6 +164,7 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         graphPersistenceService.save(model)
 
         assertEquals 1, GraphModel.count()
+        assertEquals 1, GraphLayout.count()
 
         assertNotNull model.id
 
@@ -143,15 +176,21 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertEquals 0, Node.count()
         assertEquals 0, Edge.count()
         assertEquals 0, NodePort.count()
+        assertEquals 0, GraphLayout.count()
+        assertEquals 0, ControlPoint.count()
+        assertEquals 0, ComponentLayout.count()
+        assertEquals 0, EdgeLayout.count()
     }
 
     void testUpdate() {
 
         ModelGraphModel model = new ModelGraphModel("name", "package")
         ComponentNode node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name")
+        node.rectangle = new Rectangle(10, 10, 100, 100)
         ComponentNode node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "name2")
 
-        model.createConnection(node.getPort("input3"), node2.getPort("outClaims"))
+        final Connection connection = model.createConnection(node.getPort("input3"), node2.getPort("outClaims"))
+        connection.controlPoints = [new Point(50, 100), new Point(100, 200)]
 
         graphPersistenceService.save(model)
 
@@ -163,9 +202,11 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         model = new ModelGraphModel("name2", "package2")
         model.id = id
         node = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "newName")
+        node.rectangle = new Rectangle(20, 20, 200, 200)
         node2 = model.createComponentNode(PaletteService.instance.getComponentDefinition(TestComponent), "newName2")
 
-        model.createConnection(node2.getPort("input3"), node.getPort("outClaims"))
+        connection = model.createConnection(node2.getPort("input3"), node.getPort("outClaims"))
+        connection.controlPoints = [new Point(10, 20), new Point(20, 30)]
 
         graphPersistenceService.save(model)
 
@@ -197,6 +238,18 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         Edge edge = persistentModel.edges.toList()[0]
         assertEquals "${name2.name}.${name2_input3.name}", edge.from
         assertEquals "${name.name}.${name_outClaims.name}", edge.to
+
+        GraphLayout layout = GraphLayout.findByGraphModel(persistentModel)
+        final ComponentLayout nodeLayout = layout.components.find { it.node.name == "newName" }
+        assertEquals(20, nodeLayout.x)
+        assertEquals(20, nodeLayout.y)
+        assertEquals(200, nodeLayout.width)
+        assertEquals(200, nodeLayout.height)
+
+        final EdgeLayout edgeLayout = layout.edges.toList()[0]
+        assertEquals(2, edgeLayout.points.size())
+        assertNotNull(edgeLayout.points.find { it.x == 10 && it.y == 20})
+        assertNotNull(edgeLayout.points.find { it.x == 20 && it.y == 30})
 
     }
 }

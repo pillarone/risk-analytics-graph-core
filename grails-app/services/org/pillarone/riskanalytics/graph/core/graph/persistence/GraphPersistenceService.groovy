@@ -8,32 +8,47 @@ import org.springframework.dao.DataAccessException
 import org.pillarone.riskanalytics.graph.core.graph.model.ComposedComponentGraphModel
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.palette.service.PaletteService
-import org.pillarone.riskanalytics.core.model.Model
+
 import org.pillarone.riskanalytics.core.model.registry.ModelRegistry
+import org.pillarone.riskanalytics.graph.core.layout.GraphLayout
+import org.pillarone.riskanalytics.core.user.UserManagement
+import org.pillarone.riskanalytics.graph.core.layout.ComponentLayout
+import org.pillarone.riskanalytics.graph.core.layout.EdgeLayout
+import java.awt.Point
+import org.pillarone.riskanalytics.graph.core.layout.ControlPoint
+import java.awt.Rectangle
 
 class GraphPersistenceService {
 
     protected PaletteService paletteService = PaletteService.getInstance()
 
     void save(AbstractGraphModel graphModel) {
-        GraphModel model = findOrCreateGraphModel(graphModel)
+        final GraphModel model = findOrCreateGraphModel(graphModel)
+        final GraphLayout layout = findOrCreateGraphLayout(model)
+        removeExistingEntities(model, layout)
 
-        for (ComponentNode node in graphModel.allComponentNodes) {
-            model.addToNodes(createNode(node))
+        for (ComponentNode componentNode in graphModel.allComponentNodes) {
+            final Node node = createNode(componentNode)
+            model.addToNodes(node)
+            addLayoutInfo(layout, componentNode, node)
         }
 
         for (Connection connection in graphModel.allConnections) {
-            model.addToEdges(
-                    new Edge(
-                            from: "${connection.from.componentNode.name}.${connection.from.name}",
-                            to: "${connection.to.componentNode.name}.${connection.to.name}"
-                    )
+            final Edge edge = new Edge(
+                    from: "${connection.from.componentNode.name}.${connection.from.name}",
+                    to: "${connection.to.componentNode.name}.${connection.to.name}"
             )
+            model.addToEdges(edge)
+
+            addLayoutInfo(layout, connection, edge)
         }
         doTypeSpecificMapping(graphModel, model)
         try {
             if (!model.save(flush: true)) {
                 throw new GraphPersistenceException(model.errors.toString())
+            }
+            if (!layout.save(flush: true)) {
+                throw new GraphPersistenceException(layout.errors.toString())
             }
             graphModel.id = model.id
         } catch (DataAccessException e) {
@@ -50,33 +65,86 @@ class GraphPersistenceService {
             model.name = graphModel.name
             model.packageName = graphModel.packageName
 
-            if (model.nodes != null) {
-                Set<Node> allNodes = new HashSet<Node>(model.nodes)
-                for (Node toRemove in allNodes) {
-                    model.removeFromNodes(toRemove)
-                    toRemove.delete()
-                }
-            }
-
-            if (model.edges != null) {
-                Set<Edge> allEdges = new HashSet<Edge>(model.edges)
-                for (Edge toRemove in allEdges) {
-                    model.removeFromEdges(toRemove)
-                    toRemove.delete()
-                }
-            }
-
-            if (model.ports != null) {
-                Set<ComponentPort> allPorts = new HashSet<ComponentPort>(model.ports)
-                for (ComponentPort toRemove in allPorts) {
-                    model.removeFromPorts(toRemove)
-                    toRemove.delete()
-                }
-            }
-
         }
         model.typeClass = graphModel.class.name
         return model
+    }
+
+    protected GraphLayout findOrCreateGraphLayout(GraphModel model) {
+        GraphLayout layout = null
+
+        if (model.id != null) {
+            layout = GraphLayout.findByPersonAndGraphModel(org.pillarone.riskanalytics.core.user.UserManagement.currentUser, model)
+        }
+
+        if (layout == null) {
+            layout = new GraphLayout(graphModel: model, person: UserManagement.currentUser)
+        }
+
+        return layout
+    }
+
+    protected removeExistingEntities(GraphModel model, GraphLayout layout) {
+        if (layout.components != null) {
+            Set<ComponentLayout> allNodes = new HashSet<ComponentLayout>(layout.components)
+            for (ComponentLayout toRemove in allNodes) {
+                layout.removeFromComponents(toRemove)
+                toRemove.delete()
+            }
+        }
+        if (layout.edges != null) {
+            Set<EdgeLayout> allNodes = new HashSet<EdgeLayout>(layout.edges)
+            for (EdgeLayout toRemove in allNodes) {
+                layout.removeFromEdges(toRemove)
+                toRemove.delete()
+            }
+        }
+
+        if (model.nodes != null) {
+            Set<Node> allNodes = new HashSet<Node>(model.nodes)
+            for (Node toRemove in allNodes) {
+                model.removeFromNodes(toRemove)
+                toRemove.delete()
+            }
+        }
+
+        if (model.edges != null) {
+            Set<Edge> allEdges = new HashSet<Edge>(model.edges)
+            for (Edge toRemove in allEdges) {
+                model.removeFromEdges(toRemove)
+                toRemove.delete()
+            }
+        }
+
+        if (model.ports != null) {
+            Set<ComponentPort> allPorts = new HashSet<ComponentPort>(model.ports)
+            for (ComponentPort toRemove in allPorts) {
+                model.removeFromPorts(toRemove)
+                toRemove.delete()
+            }
+        }
+    }
+
+    protected void addLayoutInfo(GraphLayout layout, ComponentNode componentNode, Node node) {
+        layout.addToComponents(new ComponentLayout(
+                node: node,
+                x: componentNode?.rectangle?.x,
+                y: componentNode?.rectangle?.y,
+                width: componentNode?.rectangle?.width,
+                height: componentNode?.rectangle?.height
+        ))
+    }
+
+    protected void addLayoutInfo(GraphLayout layout, Connection connection, Edge edge) {
+        EdgeLayout edgeLayout = new EdgeLayout(edge: edge)
+        if (connection.controlPoints != null) {
+            for (Point point in connection.controlPoints) {
+                edgeLayout.addToPoints(new ControlPoint(x: point.x, y: point.y))
+            }
+        }
+
+        layout.addToEdges(edgeLayout)
+
     }
 
     protected Node createNode(ComponentNode componentNode) {
@@ -101,6 +169,7 @@ class GraphPersistenceService {
             throw new GraphPersistenceException("Delete failed. No entity with id ${id} found.")
         }
         try {
+            GraphLayout.findAllByGraphModel(model)*.delete(flush: true)
             model.delete(flush: true)
             graphModel.id = null
         } catch (DataAccessException e) {
@@ -150,6 +219,7 @@ class GraphPersistenceService {
 
     protected AbstractGraphModel load(GraphModel model) {
         List<ComponentNode> createdNodes = []
+        final GraphLayout layout = findOrCreateGraphLayout(model)
 
         AbstractGraphModel graphModel = getClass().getClassLoader().loadClass(model.typeClass).newInstance()
         graphModel.name = model.name
@@ -157,12 +227,25 @@ class GraphPersistenceService {
         graphModel.id = model.id
 
         for (Node node in model.nodes) {
-            createdNodes << graphModel.createComponentNode(paletteService.getComponentDefinition(node.className), node.name)
+            final ComponentNode componentNode = graphModel.createComponentNode(paletteService.getComponentDefinition(node.className), node.name)
+            ComponentLayout componentLayout = layout.components.find { it.node.id == node.id }
+            if (componentLayout != null) {
+                componentNode.setRectangle(new Rectangle(componentLayout.x, componentLayout.y, componentLayout.width, componentLayout.height))
+            }
+            createdNodes << componentNode
         }
         for (Edge edge in model.edges) {
             ComponentNode fromNode = createdNodes.find { it.name == edge.from.split("\\.")[0] }
             ComponentNode toNode = createdNodes.find { it.name == edge.to.split("\\.")[0] }
-            graphModel.createConnection(fromNode.getPort(edge.from.split("\\.")[1]), toNode.getPort(edge.to.split("\\.")[1]))
+            final Connection connection = graphModel.createConnection(fromNode.getPort(edge.from.split("\\.")[1]), toNode.getPort(edge.to.split("\\.")[1]))
+            EdgeLayout edgeLayout = layout.edges.find { it.edge.id == edge.id }
+            if (edgeLayout != null) {
+                List<Point> points = []
+                for (ControlPoint controlPoint in edgeLayout.points) {
+                    points << new Point(controlPoint.x, controlPoint.y)
+                }
+                connection.setControlPoints(points)
+            }
         }
         doTypeSpecificLoading(graphModel, model)
         return graphModel
