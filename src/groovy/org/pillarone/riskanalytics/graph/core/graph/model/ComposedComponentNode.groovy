@@ -1,10 +1,17 @@
 package org.pillarone.riskanalytics.graph.core.graph.model
 
 import org.pillarone.riskanalytics.graph.core.graphimport.ComposedComponentGraphImport
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 
 class ComposedComponentNode extends ComponentNode {
 
     ComposedComponentGraphModel componentGraph;
+
+    public static ComposedComponentNode createInstance(ComponentDefinition definition, String name) {
+        ComposedComponentNode node = new ComposedComponentNode(type: definition, name: name)
+        addPorts(definition, node)
+        return node
+    }
 
     public ComposedComponentGraphModel getComponentGraph() {
         if (componentGraph == null) {
