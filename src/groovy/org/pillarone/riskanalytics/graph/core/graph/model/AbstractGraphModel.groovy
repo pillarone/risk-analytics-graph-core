@@ -19,6 +19,7 @@ abstract class AbstractGraphModel extends GraphElement {
 
     Long id
     String packageName
+    String helpText
 
     protected List<ComponentNode> componentNodes = []
     protected List<Connection> connections = []
