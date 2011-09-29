@@ -2,6 +2,10 @@ package org.pillarone.riskanalytics.graph.core.graph.util
 
 import org.pillarone.riskanalytics.core.util.ResourceBundleRegistry
 import java.text.MessageFormat
+import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
+import org.pillarone.riskanalytics.graph.core.graph.model.GraphElement
+import org.pillarone.riskanalytics.graph.core.graph.model.Port
+import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 
 /**
  * @author fouad.jaada@intuitive-collaboration.com
@@ -19,7 +23,7 @@ class UIUtils {
         }
 
         if (name.startsWith("sub")) {
-            return formatSubComponentName(name.substring(3))
+            name = name.substring(3)
         }
         if (name.startsWith("parm")) {
             name = name.substring(4)
@@ -117,4 +121,60 @@ class UIUtils {
         } catch (Exception ex) { /*ignore the exception*/}
         return text;
     }
+
+    public static String formatTechnicalName(String displayName, Class<? extends GraphElement> clazz, boolean isSubComponent) {
+        if (displayName == null) {
+            displayName = ""
+        }
+
+        if (ComponentNode.isAssignableFrom(clazz)) {
+            return formatTechnicalComponentName(displayName, isSubComponent)
+        }
+
+        if (Port.isAssignableFrom(clazz)) {
+            return formatTechnicalPortName(displayName, InPort.isAssignableFrom(clazz))
+        }
+        return null
+    }
+
+    public static String transformToSubComponentName(String technicalName) {
+        String name = technicalName[0].toUpperCase()+technicalName[1..-1]
+        return "sub"+name
+    }
+
+    private static String formatTechnicalName(String displayName, boolean startWithLowerCase) {
+        String[] nameElements = displayName.split(" ")
+        if (nameElements?.length>0) {
+            StringBuffer nameBuffer = new StringBuffer()
+            String firstElm = nameElements[0]
+            if (!startWithLowerCase) {
+                firstElm = capitalizeFirstLetter(firstElm)
+            }
+            nameBuffer <<= firstElm
+
+            for (int i = 1; i < nameElements.length; i++) {
+                nameBuffer <<= capitalizeFirstLetter(nameElements[i])
+            }
+            return nameBuffer.toString()
+        }
+        return null
+    }
+
+    private static String capitalizeFirstLetter(String name) {
+        name = name.trim()
+        return name[0].toUpperCase()+(name.length()>1 ? name[1..-1] : "")
+    }
+
+    private static String formatTechnicalComponentName(String displayName, boolean isSubComponent) {
+        String name = formatTechnicalName(displayName, !isSubComponent)
+        if (isSubComponent) {
+            name = "sub"+name
+        }
+        return name
+    }
+
+    public static String formatTechnicalPortName(String displayName, boolean isInPort) {
+        return (isInPort ? "in" : "out") + formatTechnicalName(displayName, false)
+    }
+    
 }
