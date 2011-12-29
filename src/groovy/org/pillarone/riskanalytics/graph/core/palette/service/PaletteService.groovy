@@ -11,6 +11,9 @@ import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
 import org.pillarone.riskanalytics.graph.core.loader.ClassType
 import org.apache.commons.logging.LogFactory
 import org.apache.commons.logging.Log
+import org.pillarone.riskanalytics.graph.core.palette.service.filter.IPaletteFilter
+import org.pillarone.riskanalytics.graph.core.palette.service.filter.NoFilter
+import org.codehaus.groovy.grails.commons.ConfigurationHolder
 
 
 class PaletteService {
@@ -24,8 +27,13 @@ class PaletteService {
 
     private List<IPaletteServiceListener> listeners = []
 
+    IPaletteFilter paletteFilter = new NoFilter()
+
     PaletteService() {
         initCache();
+        if(ConfigurationHolder.config.containsKey("paletteFilter")) {
+            paletteFilter = ConfigurationHolder.config.get("paletteFilter")
+        }
     }
 
     public static PaletteService getInstance() {
@@ -60,10 +68,10 @@ class PaletteService {
         provider.addIncludeFilter(new AssignableTypeFilter(Component))
         cache = provider.findCandidateComponents("org.pillarone")*.beanClassName.collect {
             new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it))
-        }
+        }.findAll { paletteFilter.accept(it) }
         cache.addAll(ClassRepository.findAllByClassType(ClassType.COMPONENT).collect {
             new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it.name))
-        })
+        }.findAll { paletteFilter.accept(it) })
         for (ComponentDefinition definition: cache) {
             addToCategoryInternal(definition);
         }
@@ -159,10 +167,12 @@ class PaletteService {
     }
 
     void addComponentDefinition(ComponentDefinition definition) {
-        cache.add(definition)
-        Collections.sort(cache, org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition.getComparator())
-        addToCategoryInternal(definition)
-        fireComponentAdded(definition)
+        if (paletteFilter.accept(definition)) {
+            cache.add(definition)
+            Collections.sort(cache, org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition.getComparator())
+            addToCategoryInternal(definition)
+            fireComponentAdded(definition)
+        }
     }
 
     void addPaletteServiceListener(IPaletteServiceListener listener) {

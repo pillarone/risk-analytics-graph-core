@@ -1,10 +1,9 @@
 package org.pillarone.riskanalytics.graph.core.palette.service
 
-import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.core.example.component.TestComponent
-import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
-import org.pillarone.riskanalytics.graph.core.loader.ClassType
-import java.lang.instrument.ClassDefinition
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
+import org.pillarone.riskanalytics.graph.core.palette.service.filter.CategoryFilter
+import org.pillarone.riskanalytics.graph.core.palette.service.filter.NoFilter
 
 class PaletteServiceTests extends GroovyTestCase {
     String ccFile = """
@@ -49,7 +48,34 @@ public class TestCC
     }
 }        """
 
-   void testGetComponents() {
+    @Override
+    protected void setUp() {
+        PaletteService.instance.reset()
+    }
+
+    void testFilter() {
+        PaletteService service = PaletteService.getInstance()
+        assertTrue(service.paletteFilter instanceof CategoryFilter) //test if filters are taken from Config
+        List<ComponentDefinition> definitions = service.getAllComponentDefinitions()
+
+        assertTrue definitions.size() > 0
+
+        service.paletteFilter = new CategoryFilter("myCategory")
+        service.reset()
+
+        definitions = service.getAllComponentDefinitions()
+
+        assertTrue definitions.empty
+
+        service.paletteFilter = new NoFilter()
+        service.reset()
+
+        definitions = service.getAllComponentDefinitions()
+
+        assertTrue definitions.size() > 0
+    }
+
+    void testGetComponents() {
         PaletteService service = PaletteService.getInstance()
         List<ComponentDefinition> definitions = service.getAllComponentDefinitions()
 
@@ -68,14 +94,14 @@ public class TestCC
         assertTrue definitions.contains(definition2)
     }
 
-    void testAddCategory(){
+    void testAddCategory() {
         PaletteService service = PaletteService.getInstance()
-        GroovyClassLoader gcl=new GroovyClassLoader();
-        Class clazz=gcl.parseClass(ccFile);
-        service.addToCategoryInternal(new ComponentDefinition(typeClass:clazz));
-        assertTrue service.getCategoriesFromDefinition(new ComponentDefinition(typeClass:clazz)).size()>0;
-        assertTrue service.getDefinitionsFromCategory("CAT1").size()>0;
-        assertTrue service.getDefinitionsFromCategory("CAT2").size()>0;
+        GroovyClassLoader gcl = new GroovyClassLoader();
+        Class clazz = gcl.parseClass(ccFile);
+        service.addToCategoryInternal(new ComponentDefinition(typeClass: clazz));
+        assertTrue service.getCategoriesFromDefinition(new ComponentDefinition(typeClass: clazz)).size() > 0;
+        assertTrue service.getDefinitionsFromCategory("CAT1").size() > 0;
+        assertTrue service.getDefinitionsFromCategory("CAT2").size() > 0;
     }
 
     void testAddComponent() {

@@ -122,7 +122,7 @@ class UIUtils {
         return text;
     }
 
-    public static String formatTechnicalName(String displayName, Class<? extends GraphElement> clazz, boolean isSubComponent) {
+    public static String formatTechnicalName(String displayName, Class clazz, boolean isSubComponent) {
         if (displayName == null) {
             displayName = ""
         }
