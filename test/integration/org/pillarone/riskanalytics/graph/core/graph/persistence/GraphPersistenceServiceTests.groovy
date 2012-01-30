@@ -106,6 +106,8 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
 
         model.createOuterInPort(TestPacket, "inOuter")
         model.createOuterOutPort(TestPacket, "outOuter")
+        model.createConnection(model.getOuterPort("inOuter"), node.getPort("input3"))
+        model.createConnection(node.getPort("outClaims"), model.getOuterPort("outOuter"))
 
         graphPersistenceService.save(model)
 
@@ -119,7 +121,7 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertEquals "package", persistentModel.packageName
 
         assertEquals 2, persistentModel.nodes.size()
-        assertEquals 1, persistentModel.edges.size()
+        assertEquals 3, persistentModel.edges.size()
 
         Node name = persistentModel.nodes.find { it.name == "name" }
         assertNotNull name
@@ -137,9 +139,18 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         NodePort name2_outClaims = name2.ports.find { it.name == "outClaims" }
         assertNotNull name2_outClaims
 
-        Edge edge = persistentModel.edges.toList()[0]
-        assertEquals "${name.name}.${name_input3.name}", edge.from
-        assertEquals "${name2.name}.${name2_outClaims.name}", edge.to
+        String innerEdgeFromName = "${name.name}.${name_input3.name}"
+        for (Edge e : persistentModel.edges.toList()) {
+            if (e.from.equals(innerEdgeFromName)) {
+                assertEquals "${name2.name}.${name2_outClaims.name}", e.to
+            } else if (e.from.equals("inOuter")) {
+                assertEquals "${name.name}.${name_input3.name}", e.to
+            } else if (e.to.equals("outOuter")) {
+                assertEquals "${name.name}.${name2_outClaims.name}", e.from
+            } else {
+                fail()
+            }
+        }
 
         assertEquals 2, persistentModel.ports.size()
 
@@ -149,7 +160,7 @@ class GraphPersistenceServiceTests extends GroovyTestCase {
         assertEquals "package", reloaded.packageName
 
         assertEquals 2, reloaded.allComponentNodes.size()
-        assertEquals 1, reloaded.allConnections.size()
+        assertEquals 3, reloaded.allConnections.size()
         assertEquals 1, reloaded.outerInPorts.size()
         assertEquals 1, reloaded.outerOutPorts.size()
     }

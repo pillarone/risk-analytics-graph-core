@@ -17,6 +17,7 @@ import org.pillarone.riskanalytics.graph.core.layout.EdgeLayout
 import java.awt.Point
 import org.pillarone.riskanalytics.graph.core.layout.ControlPoint
 import java.awt.Rectangle
+import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 
 class GraphPersistenceService {
 
@@ -33,11 +34,10 @@ class GraphPersistenceService {
             addLayoutInfo(layout, componentNode, node)
         }
 
-        for (Connection connection in graphModel.allConnections) {
-            final Edge edge = new Edge(
-                    from: "${connection.from.componentNode.name}.${connection.from.name}",
-                    to: "${connection.to.componentNode.name}.${connection.to.name}"
-            )
+        for (Connection connection in graphModel.allConnections) {    
+            String fromName = connection.from.isComposedComponentOuterPort() ? connection.from.name : "${connection.from.componentNode.name}.${connection.from.name}"
+            String toName = connection.to.isComposedComponentOuterPort() ? connection.to.name : "${connection.to.componentNode.name}.${connection.to.name}"
+            final Edge edge = new Edge( from: fromName, to: toName )
             model.addToEdges(edge)
 
             addLayoutInfo(layout, connection, edge)
@@ -225,6 +225,8 @@ class GraphPersistenceService {
         graphModel.name = model.name
         graphModel.packageName = model.packageName
         graphModel.id = model.id
+        
+        doTypeSpecificLoading(graphModel, model)
 
         for (Node node in model.nodes) {
             final ComponentNode componentNode = graphModel.createComponentNode(paletteService.getComponentDefinition(node.className), node.name)
@@ -235,9 +237,31 @@ class GraphPersistenceService {
             createdNodes << componentNode
         }
         for (Edge edge in model.edges) {
-            ComponentNode fromNode = createdNodes.find { it.name == edge.from.split("\\.")[0] }
-            ComponentNode toNode = createdNodes.find { it.name == edge.to.split("\\.")[0] }
-            final Connection connection = graphModel.createConnection(fromNode.getPort(edge.from.split("\\.")[1]), toNode.getPort(edge.to.split("\\.")[1]))
+            String[] fromElms = edge.from.split("\\.")
+            String[] toElms = edge.to.split("\\.")
+            boolean isReplicatingIn = fromElms.size()==1
+            boolean isReplicatingOut = toElms.size()==1
+            final Connection connection
+            if (!isReplicatingIn && !isReplicatingOut) {
+                ComponentNode fromNode = createdNodes.find { it.name == fromElms[0] }
+                ComponentNode toNode = createdNodes.find { it.name == toElms[0] }
+                connection = graphModel.createConnection(fromNode.getPort(fromElms[1]), toNode.getPort(toElms[1]))
+            } else if (isReplicatingIn && !isReplicatingOut) { // replicating in
+                ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) graphModel
+                ComponentNode toNode = createdNodes.find { it.name == toElms[0] }
+                Port inPort = ccGraphModel.getOuterPort(fromElms[0])
+                connection = ccGraphModel.createConnection(inPort, toNode.getPort(toElms[1]))
+            } else if (!isReplicatingIn && isReplicatingOut) {
+                ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) graphModel
+                ComponentNode fromNode = createdNodes.find { it.name == fromElms[0] }
+                Port outPort = ccGraphModel.getOuterPort(toElms[0])
+                connection = graphModel.createConnection(fromNode.getPort(fromElms[1]), outPort)
+            } else {
+                ComposedComponentGraphModel ccGraphModel = (ComposedComponentGraphModel) graphModel
+                Port inPort = ccGraphModel.getOuterPort(fromElms[0])
+                Port outPort = ccGraphModel.getOuterPort(toElms[0])
+                connection = graphModel.createConnection(inPort, outPort)
+            }
             EdgeLayout edgeLayout = layout.edges.find { it.edge.id == edge.id }
             if (edgeLayout != null) {
                 List<Point> points = []
@@ -247,7 +271,7 @@ class GraphPersistenceService {
                 connection.setControlPoints(points)
             }
         }
-        doTypeSpecificLoading(graphModel, model)
+        // doTypeSpecificLoading(graphModel, model)
         return graphModel
     }
 
