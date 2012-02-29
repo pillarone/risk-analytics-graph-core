@@ -1,20 +1,19 @@
 package org.pillarone.riskanalytics.graph.core.palette.service
 
-import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
-import org.springframework.core.type.filter.AssignableTypeFilter
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
+import org.codehaus.groovy.grails.commons.ConfigurationHolder
 import org.pillarone.riskanalytics.core.components.Component
-import org.pillarone.riskanalytics.graph.core.palette.Palette
-import org.pillarone.riskanalytics.graph.core.palette.PaletteEntry
 import org.pillarone.riskanalytics.core.components.ComponentCategory
+import org.pillarone.riskanalytics.core.util.ClassPathScanner
 import org.pillarone.riskanalytics.graph.core.loader.ClassRepository
 import org.pillarone.riskanalytics.graph.core.loader.ClassType
-import org.apache.commons.logging.LogFactory
-import org.apache.commons.logging.Log
+import org.pillarone.riskanalytics.graph.core.palette.Palette
+import org.pillarone.riskanalytics.graph.core.palette.PaletteEntry
+import org.pillarone.riskanalytics.graph.core.palette.model.ComponentDefinition
 import org.pillarone.riskanalytics.graph.core.palette.service.filter.IPaletteFilter
 import org.pillarone.riskanalytics.graph.core.palette.service.filter.NoFilter
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
-
+import org.springframework.core.type.filter.AssignableTypeFilter
 
 class PaletteService {
 
@@ -38,7 +37,7 @@ class PaletteService {
 
     public static PaletteService getInstance() {
         if (serviceAccessor == null) {
-            ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false)
+            ClassPathScanner provider = new ClassPathScanner()
             provider.addIncludeFilter(new AssignableTypeFilter(org.pillarone.riskanalytics.graph.core.palette.service.IPaletteServiceAccessor))
             List<Class> classes = provider.findCandidateComponents("org.pillarone")*.beanClassName.collect {
                 Thread.currentThread().getContextClassLoader().loadClass(it)
@@ -64,7 +63,7 @@ class PaletteService {
 
     private void initCache() {
         List<ComponentDefinition> cache
-        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false)
+        ClassPathScanner provider = new ClassPathScanner()
         provider.addIncludeFilter(new AssignableTypeFilter(Component))
         cache = provider.findCandidateComponents("org.pillarone")*.beanClassName.collect {
             new ComponentDefinition(typeClass: Thread.currentThread().getContextClassLoader().loadClass(it))
