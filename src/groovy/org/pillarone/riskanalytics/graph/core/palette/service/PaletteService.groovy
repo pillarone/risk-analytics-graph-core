@@ -29,10 +29,10 @@ class PaletteService {
     IPaletteFilter paletteFilter = new NoFilter()
 
     PaletteService() {
-        initCache();
         if(ConfigurationHolder.config.containsKey("paletteFilter")) {
             paletteFilter = ConfigurationHolder.config.get("paletteFilter")
         }
+        initCache();
     }
 
     public static PaletteService getInstance() {
