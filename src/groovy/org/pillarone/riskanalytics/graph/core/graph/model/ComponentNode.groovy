@@ -48,7 +48,7 @@ class ComponentNode extends GraphElement {
 
     protected static void addPorts(ComponentDefinition definition, ComponentNode node) {
         List<InPort> inPorts = []
-        for (Entry<Field, Class> entry in ComponentDefinition.getPortDefinitions(definition, Port.IN_PORT_PREFIX)) {
+        ComponentDefinition.getPortDefinitions(definition, Port.IN_PORT_PREFIX).each {entry ->
             inPorts << new InPort(name: entry.key.name, packetType: entry.value, componentNode: node,
                     connectionCardinality: WiringValidationUtil.getConnectionCardinality(entry.key),
                     packetCardinality: WiringValidationUtil.getPacketCardinality(entry.key));
@@ -56,7 +56,7 @@ class ComponentNode extends GraphElement {
         node.inPorts = Collections.unmodifiableList(inPorts)
 
         List<OutPort> outPorts = []
-        for (Entry<Field, Class> entry in ComponentDefinition.getPortDefinitions(definition, Port.OUT_PORT_PREFIX)) {
+        ComponentDefinition.getPortDefinitions(definition, Port.OUT_PORT_PREFIX).each { entry ->
             outPorts << new OutPort(name: entry.key.name, packetType: entry.value, componentNode: node,
                     connectionCardinality: WiringValidationUtil.getConnectionCardinality(entry.key),
                     packetCardinality: WiringValidationUtil.getPacketCardinality(entry.key));

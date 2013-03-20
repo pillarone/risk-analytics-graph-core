@@ -15,12 +15,4 @@ class ComponentLayout {
 //    boolean unfolded
 
     static belongsTo = [graphLayout: GraphLayout]
-
-
-    static constraints = {
-        x(nullable: true)
-        y(nullable: true)
-        width(nullable: true)
-        height(nullable: true)
-    }
 }

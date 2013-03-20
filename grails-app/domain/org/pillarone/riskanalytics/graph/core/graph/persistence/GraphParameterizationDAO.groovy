@@ -51,7 +51,8 @@ class GraphParameterizationDAO {
     }
 
     static mapping = {
-        comments(sort: "path", order: "asc")
+        // TODO (db) unidirectional relations cannot be sorted anymore. See if this is required.
+        //comments(sort: "path", order: "asc")
         creator lazy: false
         lastUpdater lazy: false
         creationDate type: DateTimeMillisUserType

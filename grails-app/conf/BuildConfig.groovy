@@ -5,24 +5,27 @@ grails.project.dependency.resolution = {
     repositories {
         grailsHome()
         grailsCentral()
+        mavenRepo "https://repository.intuitive-collaboration.com/nexus/content/repositories/pillarone-public/"
     }
 
-    mavenRepo "https://repository.intuitive-collaboration.com/nexus/content/repositories/pillarone-public/"
 
     plugins {
         runtime ":background-thread:1.3"
-        runtime ":hibernate:1.3.7"
+        runtime ":hibernate:2.2.1"
         runtime ":joda-time:0.5"
         runtime ":maven-publisher:0.7.5"
         runtime ":quartz:0.4.2"
-        runtime ":spring-security-core:1.1.2"
-        runtime ":tomcat:1.3.7"
+        runtime ":spring-security-core:1.2.7.3"
+        runtime ":tomcat:2.2.1"
 
         test ":code-coverage:1.2.4"
 
         if (appName == "risk-analytics-graph-core") {
-            runtime "org.pillarone:risk-analytics-core:1.5-kti"
+            runtime "org.pillarone:risk-analytics-core:1.7-a2"
         }
+    }
+    dependencies {
+	    test 'hsqldb:hsqldb:1.8.0.10'
     }
 }
 

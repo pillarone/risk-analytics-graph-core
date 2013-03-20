@@ -3,7 +3,6 @@ package org.pillarone.riskanalytics.graph.core.graph.util
 import org.pillarone.riskanalytics.core.util.ResourceBundleRegistry
 import java.text.MessageFormat
 import org.pillarone.riskanalytics.graph.core.graph.model.ComponentNode
-import org.pillarone.riskanalytics.graph.core.graph.model.GraphElement
 import org.pillarone.riskanalytics.graph.core.graph.model.Port
 import org.pillarone.riskanalytics.graph.core.graph.model.InPort
 
@@ -142,7 +141,7 @@ class UIUtils {
         return "sub"+name
     }
 
-    private static String formatTechnicalName(String displayName, boolean startWithLowerCase) {
+    private static String internalFormatTechnicalName(String displayName, boolean startWithLowerCase) {
         String[] nameElements = displayName.split(" ")
         if (nameElements?.length>0) {
             StringBuffer nameBuffer = new StringBuffer()
@@ -166,7 +165,7 @@ class UIUtils {
     }
 
     private static String formatTechnicalComponentName(String displayName, boolean isSubComponent) {
-        String name = formatTechnicalName(displayName, !isSubComponent)
+        String name = internalFormatTechnicalName(displayName, !isSubComponent)
         if (isSubComponent) {
             name = "sub"+name
         }
@@ -174,7 +173,7 @@ class UIUtils {
     }
 
     public static String formatTechnicalPortName(String displayName, boolean isInPort) {
-        return (isInPort ? "in" : "out") + formatTechnicalName(displayName, false)
+        return (isInPort ? "in" : "out") + internalFormatTechnicalName(displayName, false)
     }
     
 }

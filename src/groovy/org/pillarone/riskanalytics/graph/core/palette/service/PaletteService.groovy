@@ -128,7 +128,7 @@ class PaletteService {
     }
 
     public List<String> getCategoriesFromDefinition(ComponentDefinition definition) {
-        private List<String> categories = new ArrayList<String>();
+        List<String> categories = new ArrayList<String>();
         for (String category: categoryCache.keySet()) {
             List<ComponentDefinition> definitions = categoryCache.get(category);
             if (definitions.find {it.typeClass.equals(definition.typeClass)}) {

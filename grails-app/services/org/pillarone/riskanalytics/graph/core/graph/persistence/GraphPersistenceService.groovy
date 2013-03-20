@@ -128,10 +128,10 @@ class GraphPersistenceService {
     protected void addLayoutInfo(GraphLayout layout, ComponentNode componentNode, Node node) {
         layout.addToComponents(new ComponentLayout(
                 node: node,
-                x: componentNode?.rectangle?.x,
-                y: componentNode?.rectangle?.y,
-                width: componentNode?.rectangle?.width,
-                height: componentNode?.rectangle?.height
+                x: (componentNode?.rectangle?.x ?: 0) as int,
+                y: (componentNode?.rectangle?.y ?: 0) as int,
+                width: (componentNode?.rectangle?.width ?: 0) as int,
+                height: (componentNode?.rectangle?.height ?: 0) as int
         ))
     }
 

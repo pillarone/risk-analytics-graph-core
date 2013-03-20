@@ -41,7 +41,7 @@ class ComponentDefinition {
     }
 
     public static Map<Field, Class> getPortDefinitions(ComponentDefinition definition, String prefix) {
-        Map<String, Class> result = [:]
+        Map<Field, Class> result = [:]
         Class currentClass = definition.typeClass
         while (currentClass != Component.class) {
             for (Field field in currentClass.declaredFields) {

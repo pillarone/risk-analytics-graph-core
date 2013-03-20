@@ -3,4 +3,5 @@
 dist/*
 *.zip
 target/*
+out/*
 *.log
