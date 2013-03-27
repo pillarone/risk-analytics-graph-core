@@ -5,8 +5,8 @@
     <property name="build.prod.dir" value="${user.home}/.grails/${app.grails.version}/projects/${app.name}"/>
     <property name="plugin.dir" value="${build.prod.dir}/plugins"/>
 
-    <import>
+    <copy tofile="_build.xml" overwrite="true">
         <fileset dir="${plugin.dir}" includes="risk-analytics-core*/scripts/build.xml" />
-    </import>
-
+    </copy>
+    <import file="_build.xml"/>
 </project>
