@@ -1,3 +1,5 @@
+grails.project.dependency.resolver = "maven"
+
 grails.project.dependency.resolution = {
     inherits "global" // inherit Grails' default dependencies
     log "warn"
@@ -5,23 +7,26 @@ grails.project.dependency.resolution = {
     repositories {
         grailsHome()
         grailsCentral()
+
+        mavenCentral()
         mavenRepo "https://repository.intuitive-collaboration.com/nexus/content/repositories/pillarone-public/"
+        mavenRepo "http://repo.spring.io/milestone/" //needed for spring-security-core 2.0-rc2 plugin
     }
 
 
     plugins {
         runtime ":background-thread:1.3"
-        runtime ":hibernate:2.2.1"
+        runtime ":hibernate:3.6.10.2"
         runtime ":joda-time:0.5"
-        runtime ":maven-publisher:0.7.5"
+        runtime ":release:3.0.1"
         runtime ":quartz:0.4.2"
-        runtime ":spring-security-core:1.2.7.3"
-        runtime ":tomcat:2.2.1"
+        runtime ":spring-security-core:2.0-RC2"
+        runtime ":tomcat:7.0.42"
 
-        test ":code-coverage:1.2.4"
+        test ":code-coverage:1.2.6"
 
         if (appName == "risk-analytics-graph-core") {
-            runtime "org.pillarone:risk-analytics-core:1.7"
+            runtime "org.pillarone:risk-analytics-core:1.9-a1"
         }
     }
     dependencies {

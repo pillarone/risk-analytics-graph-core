@@ -1,13 +1,19 @@
 package org.pillarone.riskanalytics.graph.core.loader
 
 import org.codehaus.groovy.control.CompilerConfiguration
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 import org.pillarone.riskanalytics.core.FileConstants
 import org.codehaus.groovy.tools.Compiler
 import org.pillarone.riskanalytics.core.model.Model
 import org.pillarone.riskanalytics.graph.core.graph.persistence.GraphPersistenceService
 import org.pillarone.riskanalytics.core.model.registry.ModelRegistry
 
-class DatabaseClassLoaderTests extends GroovyTestCase {
+import static groovy.util.GroovyAssert.shouldFail
+import static org.junit.Assert.*
+
+class DatabaseClassLoaderTests {
 
     GraphPersistenceService graphPersistenceService
 
@@ -53,6 +59,7 @@ class TestModel extends Model {
 }
 """
 
+    @Before
     void setUp() {
         File input = new File(FileConstants.TEMP_FILE_DIRECTORY + "/src/some/packagename")
         input.deleteDir()
@@ -85,6 +92,7 @@ class TestModel extends Model {
         assertNotNull new ClassRepository(name: "some.packagename.SomeObject", data: object.bytes, classType: ClassType.DEPENDENCY).save()
     }
 
+    @Test
     void testLoadClass() {
         ClassLoader currentLoader = Thread.currentThread().contextClassLoader
 
@@ -103,12 +111,17 @@ class TestModel extends Model {
         assertEquals modelName + someObjectName, model.name
     }
 
+    @Test
     void testDeploy() {
         ClassLoader dbLoader = new DatabaseClassLoader(Thread.currentThread().contextClassLoader)
         Class c = dbLoader.loadClass("some.packagename.TestModel")
         graphPersistenceService.deployClass(c)
         Set<Class> classes = ModelRegistry.instance.allModelClasses
         assertEquals "some.packagename.TestModel", classes.toList()[0].name
+    }
+
+    @After void cleanUp() {
+        ClassRepository.list()*.delete()
     }
 
 }
