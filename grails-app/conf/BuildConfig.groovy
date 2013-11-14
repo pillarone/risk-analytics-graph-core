@@ -16,7 +16,7 @@ grails.project.dependency.resolution = {
 
     plugins {
         runtime ":background-thread:1.3"
-        runtime ":hibernate:3.6.10.2"
+        runtime ":hibernate:3.6.10.3"
         runtime ":joda-time:0.5"
         runtime ":release:3.0.1"
         runtime ":quartz:0.4.2"
@@ -26,7 +26,7 @@ grails.project.dependency.resolution = {
         test ":code-coverage:1.2.6"
 
         if (appName == "risk-analytics-graph-core") {
-            runtime "org.pillarone:risk-analytics-core:1.9-a1"
+            runtime "org.pillarone:risk-analytics-core:1.9-a3"
         }
     }
     dependencies {
