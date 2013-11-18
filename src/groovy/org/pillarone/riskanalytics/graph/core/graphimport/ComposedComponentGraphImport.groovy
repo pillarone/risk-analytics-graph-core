@@ -63,7 +63,7 @@ public class ComposedComponentGraphImport extends AbstractGraphImport {
 
     private void addOuterPorts(ComposedComponentGraphModel graph, ComposedComponent graphClass) {
         for (MetaProperty mp: graphClass.metaClass.getProperties()) {
-            if (mp.name.startsWith("in")) {
+            if (mp.name.startsWith("in") && !mp.name.equals('interceptor')) {
                 PacketList p = DefaultGroovyMethods.getAt(graphClass, mp.name);
                 graph.createOuterInPort(p.type, mp.name);
             } else if (mp.name.startsWith("out")) {
