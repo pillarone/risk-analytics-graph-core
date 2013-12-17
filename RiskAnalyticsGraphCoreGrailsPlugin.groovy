@@ -1,3 +1,5 @@
+import org.pillarone.riskanalytics.graph.core.ClassLoaderInitializer
+
 class RiskAnalyticsGraphCoreGrailsPlugin {
     // the plugin version
     def version = "1.9-SNAPSHOT"
@@ -28,7 +30,7 @@ Brief description of the plugin.
     }
 
     def doWithSpring = {
-        // TODO Implement runtime spring config (optional)
+        initializer(ClassLoaderInitializer)
     }
 
     def doWithDynamicMethods = { ctx ->

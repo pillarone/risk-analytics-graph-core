@@ -8,11 +8,13 @@ public class DatabaseClassLoader extends ClassLoader {
 
     public DatabaseClassLoader(ClassLoader parent) {
         super(parent);
-        availableClasses = GroovyHelper.getAllClassNames();
     }
 
     @Override
     protected synchronized Class<?> findClass(String name) throws ClassNotFoundException {
+        if(availableClasses == null) {
+            refresh();
+        }
         if (!availableClasses.contains(name)) {
             throw new ClassNotFoundException(name);
         }
