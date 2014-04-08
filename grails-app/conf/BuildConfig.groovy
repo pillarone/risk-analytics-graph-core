@@ -20,7 +20,7 @@ grails.project.dependency.resolution = {
         runtime ":hibernate:3.6.10.3"
         runtime ":joda-time:0.5"
         runtime ":release:3.0.1"
-        runtime ":quartz:0.4.2"
+        runtime ":quartz:1.0.1"
         runtime ":spring-security-core:2.0-RC2"
         runtime ":tomcat:7.0.42"
 
