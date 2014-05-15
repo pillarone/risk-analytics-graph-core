@@ -1,11 +1,13 @@
 package org.pillarone.riskanalytics.graph.core.graphimport.dynamic
 
+import models.core.CoreModel
 import org.apache.commons.lang.StringUtils
 import org.pillarone.riskanalytics.core.components.Component
 import org.pillarone.riskanalytics.core.model.Model
 import org.pillarone.riskanalytics.core.output.NoOutput
 import org.pillarone.riskanalytics.core.parameterization.ParameterApplicator
 import org.pillarone.riskanalytics.core.parameterization.ParameterizationHelper
+import org.pillarone.riskanalytics.core.simulation.engine.ResultData
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationConfiguration
 import org.pillarone.riskanalytics.core.simulation.engine.SimulationRunner
 import org.pillarone.riskanalytics.core.simulation.engine.grid.SimulationBlock
@@ -16,7 +18,6 @@ import org.pillarone.riskanalytics.core.simulation.item.VersionNumber
 import org.pillarone.riskanalytics.core.util.PropertiesUtils
 import org.pillarone.riskanalytics.core.wiring.IPacketListener
 import org.pillarone.riskanalytics.core.wiring.Transmitter
-import org.pillarone.riskanalytics.graph.core.graph.model.Connection
 import org.pillarone.riskanalytics.graph.core.graph.model.ModelGraphModel
 import org.pillarone.riskanalytics.graph.core.graphimport.TraceImport
 
@@ -58,20 +59,19 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
         Simulation run = new Simulation("Core_${new Date().toString()}")
 
         run.parameterization = params
-        run.template = new ResultConfiguration("test")
+        run.template = new ResultConfiguration("test", CoreModel)
         run.modelClass = data.model
         run.modelVersionNumber = new VersionNumber("1")
         run.periodCount = 1
         run.numberOfIterations = 1
         run.structure = null
 
-        SimulationConfiguration simulationConfiguration = new SimulationConfiguration(
-                simulation: run, outputStrategy: new NoOutput(),
-                simulationBlocks: [new SimulationBlock(0, run.numberOfIterations, 0)]
-        )
+        SimulationConfiguration simulationConfiguration = new SimulationConfiguration(run)
+        simulationConfiguration.simulationBlocks = [new SimulationBlock(0, run.numberOfIterations, 0)]
+        simulationConfiguration.outputStrategy = new NoOutput()
         //Add PacketListener, so packets are traced while running a simulation
         simulationConfiguration.packetListener = ipl;
-
+        simulationConfiguration.resultDataSource = new ResultData()
         SimulationRunner runner = SimulationRunner.createRunner();
         runner.simulationConfiguration = simulationConfiguration
 
@@ -84,10 +84,10 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
     @Deprecated
     public ModelGraphModel createFromWired(Model m) {
         graph = new ModelGraphModel(m.getClass().getSimpleName(), m.getClass().getPackage().name);
-        for (Component c: m.allComponents) {
+        for (Component c : m.allComponents) {
             if (!resolveInterior(c))
                 addComponentNode(m, c);
-            for (Transmitter t: c.allInputTransmitter) {
+            for (Transmitter t : c.allInputTransmitter) {
                 wireComponents(m, m, t);
             }
         }
@@ -109,7 +109,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
     private String getFileContent(String fileContent) {
         List<String> lines = new StringReader(fileContent).readLines();
         Properties properties = getProperties(lines)
-        properties.propertyNames().each {String old ->
+        properties.propertyNames().each { String old ->
             fileContent = fileContent.replaceAll(old, properties.get(old))
         }
         return fileContent
@@ -118,7 +118,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
     private void spreadRanges(ConfigObject config) {
         def rangeKeys = [:]
         List ranges = []
-        config.each {key, value ->
+        config.each { key, value ->
             if (value instanceof ConfigObject) {
                 spreadRanges(value)
             }
@@ -137,7 +137,7 @@ public class DynamicModelGraphImport extends AbstractDynamicGraphImport {
 
 
     private String getVersion(List lines) {
-        for (String str: lines) {
+        for (String str : lines) {
             if (StringUtils.isNotEmpty(str) && str.indexOf("applicationVersion") != -1) {
                 return str.substring(str.indexOf("=") + 1).trim().replaceAll("'", "")
             }
